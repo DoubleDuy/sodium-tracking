@@ -29,7 +29,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/splash" element={<Splash />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/daily" element={<DailyTracking />} />
           <Route path="/weekly" element={<WeeklyTracking />} />
