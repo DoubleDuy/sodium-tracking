@@ -310,5 +310,5 @@ const Index = () => {
     </div>
   );
 };
-
+              {/* Google Login */}
 export default Index;
