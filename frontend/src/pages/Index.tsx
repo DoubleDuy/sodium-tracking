@@ -4,7 +4,7 @@ import { Eye, EyeOff, Droplets, User, Lock, Mail, ChevronDown } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -310,5 +310,5 @@ const Index = () => {
     </div>
   );
 };
-              {/* Google Login */}
+
 export default Index;

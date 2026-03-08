@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Mail, Lock, ChevronDown } from "lucide-react";
+import { ArrowLeft, User, Lock, Mail, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
@@ -25,6 +25,9 @@ const Register = () => {
     e.preventDefault();
     navigate("/splash");
   };
+
+  const inputClass =
+    "w-full rounded-xl border border-border bg-card/50 py-3 px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -60,7 +63,19 @@ const Register = () => {
               placeholder="ชื่อ - นามสกุล"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card/50 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+              className={`${inputClass} pl-11`}
+            />
+          </div>
+
+          {/* Email */}
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="email"
+              placeholder="อีเมล"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`${inputClass} pl-11`}
             />
           </div>
 
@@ -86,35 +101,16 @@ const Register = () => {
               onChange={(e) => setAge(e.target.value)}
               className="w-full rounded-xl border border-border bg-card/50 py-3 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
             />
-            <div className="flex gap-1">
-              <input
-                type="number"
-                placeholder="กก."
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                className="w-full rounded-xl border border-border bg-card/50 py-3 px-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Height */}
-          <input
-            type="number"
-            placeholder="ส่วนสูง (ซม.)"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card/50 py-3 px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-          />
-
-          {/* Email */}
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              type="email"
-              placeholder="อีเมล"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card/50 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+              type="text"
+              placeholder="น้ำหนัก/ส่วนสูง"
+              value={weight && height ? `${weight}/${height}` : ""}
+              onChange={(e) => {
+                const parts = e.target.value.split("/");
+                setWeight(parts[0] || "");
+                setHeight(parts[1] || "");
+              }}
+              className="w-full rounded-xl border border-border bg-card/50 py-3 px-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
             />
           </div>
 
@@ -126,23 +122,32 @@ const Register = () => {
               placeholder="รหัสผ่าน"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card/50 py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+              className={`${inputClass} pl-11`}
             />
           </div>
 
-          {/* Role selection */}
+          {/* Role selection - checkbox style */}
           <div>
             <p className="mb-2 text-sm font-medium text-foreground">ประเภทผู้ใช้</p>
             <div className="flex gap-3">
               {roleOptions.map((r) => (
                 <label
                   key={r.value}
-                  className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 py-2.5 text-sm font-medium transition-all ${
-                    role === r.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-primary/50"
-                  }`}
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 text-sm text-foreground"
                 >
+                  <div
+                    className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                      role === r.value
+                        ? "border-primary bg-primary"
+                        : "border-border"
+                    }`}
+                  >
+                    {role === r.value && (
+                      <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
                   <input
                     type="radio"
                     name="role"

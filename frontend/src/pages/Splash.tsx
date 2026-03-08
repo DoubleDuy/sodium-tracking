@@ -7,7 +7,7 @@ import logoNursing from "@/assets/logo-nursing.png";
 import logoSSS from "@/assets/logo-sss.png";
 
 const logos = [
-  { src: logoCS, label: "Computer Science." },
+  { src: logoCS, label: "CS Siam U." },
   { src: logoPharmacy, label: "คณะเภสัชศาสตร์" },
   { src: logoNursing, label: "กพย." },
   { src: logoSSS, label: "สสส." },
@@ -72,7 +72,7 @@ const Splash = () => {
             className="text-center"
           >
             <h1 className="font-heading text-3xl font-bold text-foreground">
-              SodiumTracking
+              Desalt DeNa
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               ติดตามปริมาณโซเดียมของคุณอย่างง่ายดาย
