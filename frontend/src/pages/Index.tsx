@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Droplets, User, Lock } from "lucide-react";
+import { Eye, EyeOff, Droplets, User, Lock, Mail, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -8,18 +8,33 @@ const Index = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  
+
+  // Register fields
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [role, setRole] = useState("");
+
+  const genderOptions = ["ชาย", "หญิง", "ไม่ระบุเพศ"];
+  const roleOptions = [
+    { value: "general", label: "บุคคลทั่วไป" },
+    { value: "teacher", label: "อาจารย์" },
+    { value: "student", label: "นักศึกษา" },
+  ];
 
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      navigate("/splash");
-    } else {
-      navigate("/register");
-    }
+    navigate("/splash");
   };
+
+  const inputClass =
+    "w-full rounded-xl border border-border bg-card/50 py-3 px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -80,46 +95,163 @@ const Index = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={isLogin ? "login" : "register"}
-              initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              {/* Username */}
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="ชื่อผู้ใช้"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card/50 py-3.5 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-                />
-              </div>
+            {isLogin ? (
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                {/* Username */}
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="ชื่อผู้ใช้"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={`${inputClass} pl-11`}
+                  />
+                </div>
 
-              {/* Password */}
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="รหัสผ่าน"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card/50 py-3.5 pl-11 pr-12 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+                {/* Password */}
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="รหัสผ่าน"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputClass} pl-11 pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="register"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                {/* Full Name */}
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="ชื่อ - นามสกุล"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={`${inputClass} pl-11`}
+                  />
+                </div>
 
-            </motion.div>
+                {/* Email */}
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="email"
+                    placeholder="อีเมล"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`${inputClass} pl-11`}
+                  />
+                </div>
+
+                {/* Gender, Age, Weight/Height row */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="relative">
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-border bg-card/50 py-3 pl-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                    >
+                      <option value="">เพศ</option>
+                      {genderOptions.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="อายุ"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-card/50 py-3 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="น้ำหนัก/ส่วนสูง"
+                    value={weight && height ? `${weight}/${height}` : ""}
+                    onChange={(e) => {
+                      const parts = e.target.value.split("/");
+                      setWeight(parts[0] || "");
+                      setHeight(parts[1] || "");
+                    }}
+                    className="w-full rounded-xl border border-border bg-card/50 py-3 px-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="password"
+                    placeholder="รหัสผ่าน"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className={`${inputClass} pl-11`}
+                  />
+                </div>
+
+                {/* Role selection */}
+                <div>
+                  <p className="mb-2 text-sm font-medium text-foreground">ประเภทผู้ใช้</p>
+                  <div className="flex gap-3">
+                    {roleOptions.map((r) => (
+                      <label
+                        key={r.value}
+                        className="flex flex-1 cursor-pointer items-center justify-center gap-2 text-sm text-foreground"
+                      >
+                        <div
+                          className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                            role === r.value
+                              ? "border-primary bg-primary"
+                              : "border-border"
+                          }`}
+                        >
+                          {role === r.value && (
+                            <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </div>
+                        <input
+                          type="radio"
+                          name="role"
+                          value={r.value}
+                          checked={role === r.value}
+                          onChange={(e) => setRole(e.target.value)}
+                          className="sr-only"
+                        />
+                        {r.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Forgot password */}
