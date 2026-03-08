@@ -273,7 +273,7 @@ const Index = () => {
             {isLogin ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
           </motion.button>
 
-          {/* Divider */}
+          {/* Divider + Google Login (login tab only) */}
           {isLogin && (
             <>
               <div className="flex items-center gap-3">
@@ -282,7 +282,6 @@ const Index = () => {
                 <div className="h-px flex-1 bg-border" />
               </div>
 
-              {/* Google Login */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
