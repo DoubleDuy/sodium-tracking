@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Splash from "./pages/Splash";
 import Index from "./pages/Index";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import DailyTracking from "./pages/DailyTracking";
 import WeeklyTracking from "./pages/WeeklyTracking";

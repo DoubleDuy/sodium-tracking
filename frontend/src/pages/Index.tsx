@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Droplets, User, Lock, Mail, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+
+
 
 const Index = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +20,9 @@ const Index = () => {
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const genderOptions = ["ชาย", "หญิง", "ไม่ระบุเพศ"];
   const roleOptions = [
@@ -28,8 +33,77 @@ const Index = () => {
 
   const navigate = useNavigate();
 
+  const checkPasswordStrength = (pwd: string) => {
+    const lengthCriteria = pwd.length >= 4;
+    return {
+      isValid: lengthCriteria,
+    };
+  };
+
+  // Reset form state when switching between login and register
+  useEffect(() => {
+    setErrorMsg("");
+    // Login fields
+    setUsername("");
+    setPassword("");
+    // Register fields
+    setFullName("");
+    setEmail("");
+    setGender("");
+    setAge("");
+    setWeight("");
+    setHeight("");
+    setRegPassword("");
+    setConfirmPassword("");
+    setRole("");
+  }, [isLogin]);
+
+  // คำนวณสถานะรหัสผ่านแบบ Real-time
+  const passwordStatus = checkPasswordStrength(regPassword);
+  const isPasswordMatch = regPassword === confirmPassword && confirmPassword !== "";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
+
+    
+    // ดักจับก่อนกดยืนยัน (เฉพาะตอนสมัครสมาชิก)
+    if (!isLogin) {
+        if (!fullName || !email || !gender || !age || !weight || !height || !regPassword || !confirmPassword || !role) {
+          setErrorMsg("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+          return;
+        }
+
+        if  (!genderOptions.includes(gender)) {
+          setErrorMsg("กรุณาเลือกเพศให้ถูกต้อง");
+          return;
+        }
+
+        if (!age || isNaN(Number(age)) || Number(age) < 1 || Number(age) > 100) {
+          setErrorMsg("กรุณากรอกอายุให้ถูกต้อง (1-100)");
+          return;
+        }
+
+        if (!height || isNaN(Number(height)) || Number(height) < 100) {
+          setErrorMsg("กรุณากรอกส่วนสูงให้ถูกต้อง (อย่างน้อย 100 cm)");
+          return;
+        }
+
+        if (!weight || isNaN(Number(weight)) || Number(weight) < 30) {
+          setErrorMsg("กรุณากรอกน้ำหนักให้ถูกต้อง (อย่างน้อย 30 kg)");
+          return;
+        }
+
+        if (!passwordStatus.isValid) {
+            setErrorMsg("กรุณาตั้งรหัสผ่านให้มีความยาวอย่างน้อย 4 ตัวอักษร");
+            return;
+        }
+        if (!isPasswordMatch) {
+            setErrorMsg("ยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
+            return;
+        }
+    }
+
     navigate("/splash");
   };
 
@@ -169,7 +243,7 @@ const Index = () => {
                 </div>
 
                 {/* Gender, Age, Weight/Height row */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="relative">
                     <select
                       value={gender}
@@ -188,19 +262,27 @@ const Index = () => {
                     placeholder="อายุ"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
+                    min="1"
+                    max="100"
                     className="w-full rounded-xl border border-border bg-card/50 py-3 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
                   />
                   <input
-                    type="text"
-                    placeholder="น้ำหนัก/ส่วนสูง"
-                    value={weight && height ? `${weight}/${height}` : ""}
-                    onChange={(e) => {
-                      const parts = e.target.value.split("/");
-                      setWeight(parts[0] || "");
-                      setHeight(parts[1] || "");
-                    }}
-                    className="w-full rounded-xl border border-border bg-card/50 py-3 px-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                    type="number"
+                    placeholder="ส่วนสูง (cm)"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    min="100"
+                    className="w-full rounded-xl border border-border bg-card/50 py-3 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
                   />
+                  <input
+                    type="number"
+                    placeholder="น้ำหนัก (kg)"
+                    value={weight}
+                    min="30"
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-card/50 py-3 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                  />
+
                 </div>
 
                 {/* Password */}
@@ -211,6 +293,18 @@ const Index = () => {
                     placeholder="รหัสผ่าน"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
+                    className={`${inputClass} pl-11`}
+                  />
+                </div>
+
+                {/* Confirm Password */}
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="password"
+                    placeholder="ยืนยันรหัสผ่าน"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`${inputClass} pl-11`}
                   />
                 </div>
@@ -261,6 +355,17 @@ const Index = () => {
                 ลืมรหัสผ่าน?
               </button>
             </div>
+          )}
+
+          {/* Error Message */}
+          {errorMsg && !isLogin && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center text-sm text-destructive"
+            >
+              {errorMsg}
+            </motion.div>
           )}
 
           {/* Submit */}
