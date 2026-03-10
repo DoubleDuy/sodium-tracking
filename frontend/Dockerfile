@@ -1,13 +1,16 @@
+# 1. เปลี่ยนจาก 18 เป็น 22 (LTS) หรือ 20
 FROM node:22-alpine
-# ติดตั้ง pnpm ก่อน
-RUN npm install -g pnpm
 
 WORKDIR /app
-COPY pnpm-lock.yaml* package.json ./
-RUN pnpm install
+
+# 2. Copy package files
+COPY package.json package-lock.json* ./
+
+# 3. ลง library ใหม่ (ลบ node_modules เดิมออกด้วย)
+RUN npm install
 
 COPY . . 
 
-EXPOSE 5173
+EXPOSE 5174
 
 CMD ["npm", "run", "dev"]
