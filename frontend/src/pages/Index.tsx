@@ -15,7 +15,7 @@ import Points from "@/components/pages/Points";
 
 // 1. แก้ไข: Layout สำหรับจัดหน้า Auth ให้อยู่กึ่งกลางเป๊ะ
 const AuthLayout = () => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-4">
+  <div className="w-full">
     <Outlet />
   </div>
 );
@@ -30,24 +30,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const Index = () => {
   return (
     <Routes>
-      {/* กลุ่มหน้า Auth: จะถูกจัดให้อยู่กึ่งกลางผ่าน AuthLayout */}
+      {/* Public Routes: หน้าที่ไม่ต้อง Login */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Auth />} />
       </Route>
-
-      {/* หน้า Dashboard: แสดงผลในพื้นที่หลัก */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      
-      <Route path="/food-log" element={<FoodLog />} />
-      <Route path="/food-recommend" element={<FoodRecommend />} />
-      <Route path="/daily" element={<DailyTracking />} />
-      <Route path="/weekly" element={<WeeklyTracking />} />
-      <Route path="/stats" element={<Stats />} />
-      <Route path="/medicine" element={<Medicine />} />
       <Route path="/splash" element={<Splash />} />
-      <Route path="/points" element={<Points />} />
+
+      {/* Protected Routes: หน้าที่ต้อง Login ก่อน */}
+      <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/food-log" element={<FoodLog />} />
+        <Route path="/food-recommend" element={<FoodRecommend />} />
+        <Route path="/daily" element={<DailyTracking />} />
+        <Route path="/weekly" element={<WeeklyTracking />} />
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/medicine" element={<Medicine />} />
+        <Route path="/points" element={<Points />} />
+      </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
