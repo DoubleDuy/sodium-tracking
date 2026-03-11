@@ -1,17 +1,17 @@
 // Index.tsx
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import Auth from "@/components/pages/Auth";
-import Dashboard from "@/components/pages/Dashboard";
-import Settings from "@/components/pages/Settings";
-import Profile from "@/components/pages/Profile";
-import FoodLog from "@/components/pages/FoodLog";
-import FoodRecommend from "@/components/pages/FoodRecommend";
-import DailyTracking from "@/components/pages/DailyTracking";
-import WeeklyTracking from "@/components/pages/WeeklyTracking";
-import Stats from "@/components/pages/Stats";
-import Medicine from "@/components/pages/Medicine";
-import Splash from "@/components/pages/Splash";
-import Points from "@/components/pages/Points";
+import Auth from "./Auth";
+import Dashboard from "./Dashboard";
+import Settings from "./Settings";
+import Profile from "./Profile";
+import FoodLog from "./FoodLog";
+import FoodRecommend from "./FoodRecommend";
+import DailyTracking from "./DailyTracking";
+import WeeklyTracking from "./WeeklyTracking";
+import Stats from "./Stats";
+import Medicine from "./Medicine";
+import Splash from "./Splash";
+import Points from "./Points";
 
 // 1. แก้ไข: Layout สำหรับจัดหน้า Auth ให้อยู่กึ่งกลางเป๊ะ
 const AuthLayout = () => (
