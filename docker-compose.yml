@@ -7,7 +7,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5174:5174"  # เข้าผ่าน Browser ด้วย http://localhost:5173
+      - "5175:5174"  # เข้าผ่าน Browser ด้วย http://localhost:5173
     volumes:
       - ./frontend:/app
       - /app/node_modules
