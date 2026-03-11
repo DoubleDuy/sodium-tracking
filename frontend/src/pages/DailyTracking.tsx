@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Plus } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
+import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import api from "@/lib/axios";
 
 const DailyTracking = () => {
   
+  const navigate = useNavigate();
   const [todayFoods, setTodayFoods] = useState<any[]>([]);
   
   useEffect(() => {
@@ -48,7 +51,7 @@ const DailyTracking = () => {
           <h2 className="font-heading text-lg font-bold text-foreground">
             อาหารที่คุณรับประทานไปวันนี้
           </h2>
-          <button className="flex items-center gap-1 rounded-xl bg-secondary px-3 py-2 text-xs font-semibold text-foreground">
+          <button onClick={() => navigate("/food-log")} className="flex items-center gap-1 rounded-xl bg-secondary px-3 py-2 text-xs font-semibold text-foreground">
             <Plus className="h-4 w-4" />
             เพิ่มรายการอาหาร
           </button>

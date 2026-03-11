@@ -74,14 +74,20 @@ const Auth = () => {
 
     if (isLogin) {
       // สำหรับ Login
-      const response = await api.post("/index.php?page=login", {
-        email: username, // ใน state คุณตั้งชื่อว่า username แต่ส่งไปเป็น email
-        password: password,
-      });
+      try {
+        const response = await api.post("/index.php?page=login", {
+          email: username, // ใน state คุณตั้งชื่อว่า username แต่ส่งไปเป็น email
+          password: password,
+        });
 
-      if (response.data.status === "success") {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        navigate("/splash");
+        if (response.data.status === "success") {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+          navigate("/splash");
+        }
+      } catch (error: any) {
+        // ✅ ดึง message จาก Backend (login.php) มาใช้
+        const message = error.response?.data?.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
+        setErrorMsg(message);
       }
       
       const savedUser = localStorage.getItem("user");
@@ -222,10 +228,12 @@ const Auth = () => {
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
-                    type="text"
-                    placeholder="ชื่อผู้ใช้"
+                    type="email"
+                    name="email"
+                    placeholder="อีเมล"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="email"
                     className={`${inputClass} pl-11`}
                   />
                 </div>
@@ -235,9 +243,11 @@ const Auth = () => {
                   <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     placeholder="รหัสผ่าน"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     className={`${inputClass} pl-11 pr-12`}
                   />
                   <button
@@ -278,6 +288,7 @@ const Auth = () => {
                     placeholder="อีเมล"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                     className={`${inputClass} pl-11`}
                   />
                 </div>
@@ -332,6 +343,7 @@ const Auth = () => {
                     placeholder="รหัสผ่าน"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
+                    autoComplete="current-password"
                     className={`${inputClass} pl-11`}
                   />
                 </div>
@@ -344,6 +356,7 @@ const Auth = () => {
                     placeholder="ยืนยันรหัสผ่าน"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                     className={`${inputClass} pl-11`}
                   />
                 </div>

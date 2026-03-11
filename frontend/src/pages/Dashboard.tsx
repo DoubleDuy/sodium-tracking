@@ -4,34 +4,54 @@ import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { Navigate } from "react-router-dom";
-
-const chartData = [
-  { day: "จ.", sodium: 2100 },
-  { day: "อ.", sodium: 3200 },
-  { day: "พ.", sodium: 1800 },
-  { day: "พฤ.", sodium: 2900 },
-  { day: "ศ.", sodium: 800 },
-  { day: "ส.", sodium: 3600 },
-  { day: "อา.", sodium: 1900 },
-];
+import { useState, useEffect } from "react";
+import api from "@/lib/axios";
 
 const features = [
   { icon: UtensilsCrossed, label: "กรอกข้อมูลอาหาร", path: "/food-log", bg: "bg-[hsl(30,90%,55%)]" },
   { icon: BookOpen, label: "แนะนำรายการอาหาร", path: "/food-recommend", bg: "bg-[hsl(255,60%,65%)]" },
-  { icon: Pill, label: "ความรู้เกี่ยวกับยา", path: "/medicine", bg: "bg-[hsl(170,60%,55%)]" },
+  { icon: Pill, label: "ยาและสมุนไพรที่มีความเสี่ยงต่อไต", path: "/medicine", bg: "bg-[hsl(170,60%,55%)]" },
   { icon: Star, label: "คะแนนสะสม", path: "/points", bg: "bg-[hsl(40,80%,60%)]" },
 ];
 
+// ✅ ตัวแปลงวันที่เป็นชื่อย่อวันไทย
+const dayMapping: Record<number, string> = {
+  0: "อา.", 1: "จ.", 2: "อ.", 3: "พ.", 4: "พฤ.", 5: "ศ.", 6: "ส."
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [chartData, setChartData] = useState<any[]>([]);
 
   // 1. ดึงข้อมูลและตรวจสอบ
   const userString = localStorage.getItem("user");
   const userData = userString ? JSON.parse(userString) : null;
 
+  // ✅ 2. ดึงข้อมูลรายสัปดาห์จริงจาก API
+  useEffect(() => {
+    const fetchWeeklyData = async () => {
+      try {
+        const res = await api.get("/index.php?page=food-log&action=weekly");
+        if (res.data.status === "success") {
+          const formatted = res.data.data.map((item: any) => {
+            const date = new Date(item.log_date);
+            return {
+              day: dayMapping[date.getDay()], // แปลงวันที่เป็น จ., อ. ...
+              sodium: Number(item.total_sodium_daily)
+            };
+          });
+          setChartData(formatted);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      }
+    };
+    fetchWeeklyData();
+  }, []);
+
   // 2. ถ้าไม่มีข้อมูล ให้เด้งกลับไปหน้า Login (ป้องกันหน้าขาว)
   if (!userData) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -49,6 +69,7 @@ const Dashboard = () => {
           <p className="mb-4 text-xs text-muted-foreground">รายสัปดาห์(mg)</p>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
+              {/* ✅ เปลี่ยนมาใช้ chartData จาก API */}
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
