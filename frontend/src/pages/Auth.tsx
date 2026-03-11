@@ -40,6 +40,12 @@ const Auth = () => {
     };
   };
 
+  const roleMap: Record<string, string> = {
+    general: "บุคคลทั่วไป",
+    teacher: "อาจารย์",
+    student: "นักศึกษา",
+  };
+
   // Reset form state when switching between login and register
   useEffect(() => {
     setErrorMsg("");
@@ -73,14 +79,14 @@ const Auth = () => {
         password: password,
       });
 
-      const savedUser = localStorage.getItem("user");
-      if (savedUser) {
-        // ถ้ามี ให้ข้ามไปหน้า Dashboard เลย
+      if (response.data.status === "success") {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/splash");
       }
       
-      if (response.data.status === "success") {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        // ถ้ามี ให้ข้ามไปหน้า Dashboard เลย
         navigate("/splash");
       }
     } else {
@@ -119,15 +125,16 @@ const Auth = () => {
         const response = await api.post("/index.php?page=register", {
           full_name: fullName,
           email: email,
-          password: regPassword,
+          password: regPassword, // ✅ ใช้ regPassword ตาม state ที่คุณตั้งไว้
           gender: gender,
           age: age,
           weight_kg: weight,
           height_cm: height,
-          user_role: role,
+          user_role: roleMap[role] || "บุคคลทั่วไป", // ✅ แมพค่าเป็นภาษาไทยตาม DB
         });
+
         if (response.data.status === "success") {
-          setIsLogin(true);
+          setIsLogin(true); // เมื่อสมัครเสร็จ ให้สลับไปหน้า Login
           toast({
             title: "สมัครสมาชิกสำเร็จ!",
             description: "กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ",

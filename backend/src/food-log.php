@@ -11,53 +11,100 @@ if (!$user_id) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // ✅ เปลี่ยนเป็น LEFT JOIN เพื่อไม่ให้ข้อมูลอาหารที่ไม่มี restaurant_id หายไป
-    $sql = "SELECT f.*, l.location_name, r.restaurant_name 
-            FROM foods f
-            JOIN locations l ON f.location_id = l.location_id
-            LEFT JOIN restaurants r ON f.restaurant_id = r.restaurant_id 
-            ORDER BY l.location_id ASC, r.restaurant_id ASC";
+if ($method === 'GET') {
+
+    $action = $_GET['action'] ?? 'list';
+
+    // 1. ดึงรายการอาหารทั้งหมด (ของเดิม)
+    if ($action === 'list') {
+
+        $sql = "SELECT f.*, l.location_name, r.restaurant_name 
+        FROM foods f
+        JOIN locations l ON f.location_id = l.location_id
+        LEFT JOIN restaurants r ON f.restaurant_id = r.restaurant_id 
+        ORDER BY l.location_id ASC, r.restaurant_id ASC";
     
-    $stmt = $db->query($sql);
-    $all_foods = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $db->query($sql);
+        $all_foods = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $structured_data = [];
+        $structured_data = [];
 
-    foreach ($all_foods as $food) {
-        $loc_id = $food['location_id'];
-        $res_id = $food['restaurant_id'];
+        foreach ($all_foods as $food) {
+            $loc_id = $food['location_id'];
+            $res_id = $food['restaurant_id'];
 
-        // สร้างกลุ่ม Location (เช็คตาม ID เพื่อความชัวร์)
-        if (!isset($structured_data[$loc_id])) {
-            $structured_data[$loc_id] = [
-                "location_id" => $loc_id,
-                "location_name" => $food['location_name'],
-                "restaurants" => []
-            ];
+            // สร้างกลุ่ม Location (เช็คตาม ID เพื่อความชัวร์)
+            if (!isset($structured_data[$loc_id])) {
+                $structured_data[$loc_id] = [
+                    "location_id" => $loc_id,
+                    "location_name" => $food['location_name'],
+                    "restaurants" => []
+                ];
+            }
+
+            // สร้างกลุ่ม Restaurant ภายใน Location
+            if (!isset($structured_data[$loc_id]['restaurants'][$res_id])) {
+                $structured_data[$loc_id]['restaurants'][$res_id] = [
+                    "restaurant_id" => $res_id,
+                    "restaurant_name" => $food['restaurant_name'],
+                    "foods" => []
+                ];
+            }
+
+            // เพิ่มรายการอาหาร
+            $structured_data[$loc_id]['restaurants'][$res_id]['foods'][] = $food;
         }
-
-        // สร้างกลุ่ม Restaurant ภายใน Location
-        if (!isset($structured_data[$loc_id]['restaurants'][$res_id])) {
-            $structured_data[$loc_id]['restaurants'][$res_id] = [
-                "restaurant_id" => $res_id,
-                "restaurant_name" => $food['restaurant_name'],
-                "foods" => []
-            ];
-        }
-
-        // เพิ่มรายการอาหาร
-        $structured_data[$loc_id]['restaurants'][$res_id]['foods'][] = $food;
+        // ส่งกลับเฉพาะค่าที่เป็น Array (ลบ Key ที่เป็น ID ออก)
+        echo json_encode(["status" => "success", "data" => array_values($structured_data)]);
+        exit;
+    } 
+    
+    // 2. ดึงข้อมูลรายวัน (Daily)
+    elseif ($action === 'daily') {
+        $today = date('Y-m-d');
+        $sql = "SELECT li.*, f.food_name, f.sodium_mg, f.food_image, f.location_id, f.restaurant_id 
+                FROM log_items li
+                JOIN daily_logs dl ON li.log_id = dl.log_id
+                JOIN foods f ON li.food_id = f.food_id
+                WHERE dl.user_id = :uid AND dl.log_date = :today";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':uid' => $user_id, ':today' => $today]);
+        echo json_encode(["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        exit;
     }
 
-    // ส่งกลับเฉพาะค่าที่เป็น Array (ลบ Key ที่เป็น ID ออก)
-    echo json_encode(["status" => "success", "data" => array_values($structured_data)]);
+    // 3. ดึงข้อมูลรายสัปดาห์ (Weekly)
+    elseif ($action === 'weekly') {
+        $sql = "SELECT log_date, total_sodium_daily 
+                FROM daily_logs 
+                WHERE user_id = :uid 
+                ORDER BY log_date DESC LIMIT 7";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':uid' => $user_id]);
+        echo json_encode(["status" => "success", "data" => array_reverse($stmt->fetchAll(PDO::FETCH_ASSOC))]);
+        exit;
+    }
+
+    // 4. ดึงสถิติรายเดือน (Stats)
+    elseif ($action === 'stats') {
+        $sql = "SELECT DATE_FORMAT(log_date, '%M') as month, SUM(total_sodium_daily) as sodium 
+            FROM daily_logs 
+            WHERE user_id = :uid 
+            GROUP BY month, DATE_FORMAT(log_date, '%Y-%m')
+            ORDER BY DATE_FORMAT(log_date, '%Y-%m') ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':uid' => $user_id]);
+        echo json_encode(["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        exit;
+    }
+
 }
 
 elseif ($method === 'POST') {
     // บันทึกการกินอาหารลงใน daily_logs และ log_items
     $data = json_decode(file_get_contents("php://input"), true);
     $selected_foods = $data['foods']; // Array ของ food_id
+    $meal_type = $data['meal_type'] ?? 'breakfast';
     $log_date = date('Y-m-d');
 
     try {
@@ -73,8 +120,8 @@ elseif ($method === 'POST') {
         // 2. บันทึกรายการอาหารลงใน log_items
         $total_added_sodium = 0;
         foreach ($selected_foods as $food) {
-            $stmt = $db->prepare("INSERT INTO log_items (log_id, food_id, quantity) VALUES (:lid, :fid, 1)");
-            $stmt->execute([':lid' => $log_id, ':fid' => $food['food_id']]);
+        $stmt = $db->prepare("INSERT INTO log_items (log_id, food_id, quantity, meal_type) VALUES (:lid, :fid, 1, :mtype)");
+        $stmt->execute([':lid' => $log_id, ':fid' => $food['food_id'], ':mtype' => $meal_type]);
             $total_added_sodium += $food['sodium_mg'];
         }
 
