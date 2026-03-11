@@ -67,19 +67,21 @@ const Auth = () => {
     setErrorMsg("");
 
     if (isLogin) {
-      // Login Logic
-      try {
-        const response = await api.post("/index.php?page=login", {
-          email: username,
-          password: password,
-        });
-        if (response.data.status === "success") {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-          navigate("/dashboard");
-        }
-      } catch (error: any) {
-        const message = error.response?.data?.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
-        setErrorMsg(message);
+      // สำหรับ Login
+      const response = await api.post("/index.php?page=login", {
+        email: username, // ใน state คุณตั้งชื่อว่า username แต่ส่งไปเป็น email
+        password: password,
+      });
+
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        // ถ้ามี ให้ข้ามไปหน้า Dashboard เลย
+        navigate("/splash");
+      }
+      
+      if (response.data.status === "success") {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate("/splash");
       }
     } else {
       // Register Validation
@@ -421,7 +423,10 @@ const Auth = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
-                onClick={() => navigate("/splash")}
+                onClick={() => {
+                  // ให้วิ่งไปที่หน้า PHP ที่คุณทำโลจิก Google ไว้
+                  window.location.href = "http://localhost:8888/index.php?page=google-callback"; 
+                }}
                 className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card py-3.5 font-medium text-foreground shadow-sm transition-all hover:bg-secondary"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">

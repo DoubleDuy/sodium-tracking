@@ -109,7 +109,7 @@ const Profile = () => {
       title: "ออกจากระบบ",
       description: "คุณได้ออกจากระบบเรียบร้อยแล้ว",
     });
-    navigate("/login");
+    navigate("/");
     localStorage.removeItem("user");
   };
 

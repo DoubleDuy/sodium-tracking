@@ -45,8 +45,13 @@ try {
         $_SESSION['user_id'] = $userId;
         $_SESSION['full_name'] = $userInfo->name;
 
-        // 4. Redirect กลับไปยังหน้า Frontend (เปลี่ยน URL ให้ตรงกับที่ React รันอยู่)
-        header("Location: http://localhost:5174/dashboard"); 
+        $userData = urlencode(json_encode([
+            "user_id" => $userId,
+            "full_name" => $userInfo->name,
+            "email" => $userInfo->email
+        ]));
+
+        header("Location: http://localhost:5174/splash?user=" . $userData);
         exit;
     }
 } catch (Exception $e) {
