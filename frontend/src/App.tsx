@@ -15,36 +15,34 @@ import Medicine from "./pages/Medicine";
 import Points from "./pages/Points";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
-import { FoodLogProvider } from "./contexts/FoodLogContexts";
-
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <FoodLogProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Auth />} />
-            <Route path="/splash" element={<Splash />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/daily" element={<DailyTracking />} />
-            <Route path="/weekly" element={<WeeklyTracking />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/food-log" element={<FoodLog />} />
-            <Route path="/food-recommend" element={<FoodRecommend />} />
-            <Route path="/medicine" element={<Medicine />} />
-            <Route path="/points" element={<Points />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </FoodLogProvider>
+        <Routes>
+          <Route path="/" element={<Auth />} />
+          <Route path="/splash" element={<Splash />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/daily" element={<DailyTracking />} />
+          <Route path="/weekly" element={<WeeklyTracking />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/food-log" element={<FoodLog />} />
+          <Route path="/food-recommend" element={<FoodRecommend />} />
+          <Route path="/medicine" element={<Medicine />} />
+          <Route path="/points" element={<Points />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -2,6 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, User, Lock, Mail, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "@/lib/axios"; // ตรวจสอบว่ามีไฟล์ axios config แล้ว
+import { useToast } from "@/hooks/use-toast";
+
+const { toast } = useToast();
 
 const Register = () => {
   const navigate = useNavigate();
@@ -21,9 +25,47 @@ const Register = () => {
     { value: "student", label: "นักศึกษา" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate("/splash");
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // ตรวจสอบความถูกต้องเบื้องต้น
+    if (!fullName || !email || !password || !role) {
+      toast({
+        title: "ข้อมูลไม่ครบถ้วน",
+        description: "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // ✅ ต้องมีคำว่า 'async' ที่หน้า handleSubmit จึงจะใช้ 'await' ตรงนี้ได้
+      const response = await api.post("/index.php?page=register", {
+        full_name: fullName,
+        email: email,
+        password: password,
+        gender: gender,
+        age: Number(age),
+        weight_kg: Number(weight),
+        height_cm: Number(height),
+        user_role: role === "general" ? "บุคคลทั่วไป" : role === "teacher" ? "อาจารย์" : "นักศึกษา"
+      });
+
+      if (response.data.status === "success") {
+        toast({
+          title: "ลงทะเบียนสำเร็จ!",
+          description: "กรุณาเข้าสู่ระบบเพื่อใช้งาน",
+        });
+        navigate("/"); // เมื่อสำเร็จให้ไปหน้า Login
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      toast({
+        title: "ลงทะเบียนไม่สำเร็จ",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const inputClass =

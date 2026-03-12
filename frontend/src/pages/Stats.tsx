@@ -1,25 +1,33 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Cell } from "recharts";
 import PageLayout from "@/components/PageLayout";
-import { useFoodLog } from "@/contexts/FoodLogContexts";
-
-const barColors = ["hsl(30, 90%, 55%)", "hsl(0, 80%, 55%)", "hsl(120, 60%, 55%)"];
+import api from "@/lib/axios";
 
 const Stats = () => {
-  const { getMonthSummary, getWeekSummary } = useFoodLog();
-  const monthlyData = getMonthSummary();
-  const weeklyData = getWeekSummary();
 
-  const daysWithData = weeklyData.filter((d) => d.sodium > 0);
-  const avgDaily = daysWithData.length > 0
-    ? Math.round(daysWithData.reduce((s, d) => s + d.sodium, 0) / daysWithData.length)
-    : 0;
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
 
-  const chartData = monthlyData.map((m, i) => ({
-    month: m.monthLabel,
-    sodium: m.sodium,
-    color: barColors[i % barColors.length],
-  }));
+  useEffect(() => {
+    const fetchStats = async () => {
+      const res = await api.get("/index.php?page=food-log&action=stats");
+      if (res.data.status === "success") {
+        // ✅ เพิ่ม .map เพื่อใส่สี (color) เข้าไปในแต่ละตัวแปร entry
+        const dataWithColors = res.data.data.map((item: any, index: number) => ({
+          ...item,
+          sodium: Number(item.sodium),
+          // กำหนดสีตรงนี้ เช่น สลับสีตามลำดับ หรือใช้สีเดียวทั้งหมด
+          color: index % 2 === 0 ? "hsl(25 90% 50%)" : "hsl(155 55% 40%)" 
+        }));
+        setMonthlyData(dataWithColors);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const avgDaily = monthlyData.length > 0 
+    ? Math.round(monthlyData.reduce((s, d) => s + (Number(d.sodium) || 0), 0) / (monthlyData.length * 30))
+    : 0; // ✅ ป้องกัน NaN ถ้าไม่มีข้อมูล
 
   return (
     <PageLayout>
@@ -32,9 +40,7 @@ const Stats = () => {
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card rounded-2xl p-5 shadow-md text-center">
             <p className="font-heading text-base font-semibold text-foreground">เฉลี่ยต่อวัน</p>
-            <p className="font-heading text-xl font-bold mt-1" style={{ color: "hsl(25 90% 50%)" }}>
-              {avgDaily.toLocaleString()} mg
-            </p>
+            <p className="font-heading text-xl font-bold mt-1" style={{ color: "hsl(25 90% 50%)" }}>{avgDaily.toLocaleString()} mg</p>
           </div>
           <div className="glass-card rounded-2xl p-5 shadow-md text-center">
             <p className="font-heading text-base font-semibold text-foreground">เป้าหมาย</p>
@@ -45,10 +51,10 @@ const Stats = () => {
         {/* Chart */}
         <div className="glass-card rounded-2xl p-5 shadow-lg">
           <h2 className="font-heading text-lg font-semibold text-foreground">ปริมาณโซเดียม</h2>
-          <p className="mb-4 text-xs text-muted-foreground">รายเดือน (mg)</p>
+          <p className="mb-4 text-xs text-muted-foreground">รายเดือน(mg)</p>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                 <YAxis hide />
@@ -57,8 +63,8 @@ const Stats = () => {
                   formatter={(value: number) => [`${value.toLocaleString()} mg`, "โซเดียม"]}
                 />
                 <Bar dataKey="sodium" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {monthlyData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill="hsl(25 90% 50%)" />
                   ))}
                 </Bar>
               </BarChart>

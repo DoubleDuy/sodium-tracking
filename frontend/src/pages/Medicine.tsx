@@ -16,6 +16,8 @@ import drugPiroxicam from "@/assets/drug-piroxicam.png";
 import drugMeloxicam from "@/assets/drug-meloxicam.png";
 import drugMefenamic from "@/assets/drug-mefenamic.png";
 import drugIndomethacin from "@/assets/drug-indomethacin.png";
+import drugDexamethasone from "@/assets/drug-dexamethasone.png";
+import drugPrednisolone from "@/assets/drug-prednisolone.png";
 import herbCatWhiskers from "@/assets/herb-cat-whiskers.jpg";
 import herbNoni from "@/assets/herb-noni.jpg";
 import herbLicorice from "@/assets/herb-licorice.jpg";
@@ -70,8 +72,8 @@ const categories: Category[] = [
     color: "from-[hsl(200,60%,55%)] to-[hsl(220,70%,65%)]",
     infographic: infoCorticosteroid,
     items: [
-      { name: "Dexamethasone", detail: "ทำให้เกิดภาวะ Hyperfiltration ไตกรองมากเกินไป ส่งผลเสียในระยะยาว", warning: "ใช้ตามแพทย์สั่งเท่านั้น" },
-      { name: "Prednisolone", detail: "ยาสเตียรอยด์ที่ทำให้ร่างกายกักเก็บโซเดียมและน้ำ เพิ่มภาระไต", warning: "ห้ามหยุดยาเองโดยไม่ปรึกษาแพทย์" },
+      { name: "Dexamethasone", detail: "ทำให้เกิดภาวะ Hyperfiltration ไตกรองมากเกินไป ส่งผลเสียในระยะยาว", warning: "ใช้ตามแพทย์สั่งเท่านั้น", image: drugDexamethasone },
+      { name: "Prednisolone", detail: "ยาสเตียรอยด์ที่ทำให้ร่างกายกักเก็บโซเดียมและน้ำ เพิ่มภาระไต", warning: "ห้ามหยุดยาเองโดยไม่ปรึกษาแพทย์", image: drugPrednisolone },
     ],
   },
   {
@@ -90,7 +92,7 @@ const categories: Category[] = [
       { name: "ลูกเนียง", detail: "มีสาร Jengkolic Acid ส่งผลให้อุดตันในท่อไต เกิดไตวายเฉียบพลัน", warning: "ไม่ควรรับประทานเกิน 1 ฝักใหญ่", image: herbJengkol },
       { name: "ถังเช่า", detail: "บางผลิตภัณฑ์มีโลหะหนัก Arsenic สูง มีผลเสียต่อไตในระยะยาว", warning: "ควรรับประทาน 3-9 กรัม/วัน", image: herbCordyceps },
       { name: "เห็ดหลินจือ", detail: "ยังไม่มีข้อมูลทางการแพทย์เพียงพอเรื่องสรรพคุณต้านการอักเสบของไต", warning: "ไม่ควรรับประทานติดต่อกันเกิน 1 ปี", image: herbReishi },
-      { name: "ใบยอ / มะตูม", detail: "มีโพแทสเซียมสูง ใบยอควรรับประทานแบบปรุงสุก", warning: "สัปดาห์ละ 2-3 ครั้งก็เพียงพอ", image: herbMorindaBael },
+      { name: "มะตูม", detail: "ยังไม่มีหลักฐานทางการแพทย์ว่าช่วยรักษาโรคไต อาจทำให้ไตทำงานหนักขึ้น", warning: "ไม่ควรดื่มน้ำมะตูมติดต่อกันทุกวัน สัปดาห์ละ 2-3 ครั้งก็เพียงพอ", image: herbMorindaBael },
     ],
   },
 ];

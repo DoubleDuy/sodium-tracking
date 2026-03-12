@@ -4,7 +4,6 @@ import { Search, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast"; 
 import PageLayout from "@/components/PageLayout";
-import { useFoodLog } from "@/contexts/FoodLogContexts";
 import api from "@/lib/axios";
 
 const mealTypes = [
@@ -24,7 +23,6 @@ const FoodLog = () => {
   const [search, setSearch] = useState("");
   const [selectedFoods, setSelectedFoods] = useState<any[]>([]); // เก็บ Object อาหารที่เลือก
   const [isLoading, setIsLoading] = useState(true);
-  const { addEntries } = useFoodLog();
   // ✅ 1. เพิ่ม State สำหรับเปิด/ปิด Modal มื้ออาหาร
   const [showMealModal, setShowMealModal] = useState(false);
   const [locations, setLocations] = useState<any[]>([]);
@@ -139,24 +137,20 @@ const FoodLog = () => {
 
   // 4. ฟังก์ชันบันทึกข้อมูลไปยังฐานข้อมูล
   const handleMealSelect = async (mealId: string) => {
-  try {
-    const response = await api.post("/index.php?page=food-log", {
-      foods: selectedFoods,
-      meal_type: mealId
-    });
-    
-    if (response.data.status === "success") {
-      // ✅ Sync ข้อมูลเข้า Context ด้วย
-      const meal = mealTypes.find((m) => m.id === mealId);
-      addEntries(selectedFoods, mealId, meal?.label ?? mealId);
-
-      toast({ title: "บันทึกสำเร็จ", description: "บันทึกข้อมูลอาหารเรียบร้อยแล้ว" });
-      navigate("/dashboard");
+    try {
+      const response = await api.post("/index.php?page=food-log", {
+        foods: selectedFoods,
+        meal_type: mealId // แม้ใน DB จะยังไม่มี field นี้ แต่ส่งไปเผื่อขยายผลได้ครับ
+      });
+      
+      if (response.data.status === "success") {
+        toast({ title: "บันทึกสำเร็จ", description: "บันทึกข้อมูลอาหารเรียบร้อยแล้ว" });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถบันทึกข้อมูลได้", variant: "destructive" });
     }
-  } catch (error) {
-    toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถบันทึกข้อมูลได้", variant: "destructive" });
-  }
-};
+  };
 
   // ✅ 1. ตรวจสอบว่า Location ปัจจุบันควรมีแถบเลือกย่อย (Restaurant) หรือไม่
     const currentLocation = locations[activeLocation];
