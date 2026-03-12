@@ -17,6 +17,64 @@ const idToWord: Record<number, string> = {
   0: "zero" , 1: "one", 2: "two", 3: "three", 4: "four", 5: "five" , 6: "six" , 7: "seven" , 8: "eight" , 9: "nine" , 10: "ten" , 11: "eleven" , 12: "twelve" , 13: "thirteen" , 14: "fourteen" , 15: "fifteen" , 16: "sixteen" , 17: "seventeen" , 18: "eighteen"
 };
 
+const FoodItem = ({ 
+    food, 
+    isSelected, 
+    onToggle 
+  }: { 
+    food: any, 
+    isSelected: boolean, 
+    onToggle: (f: any) => void 
+  }) => {
+
+    // ฟังก์ชันสำหรับจัดการเมื่อโหลดรูปไม่สำเร็จ
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const target = e.currentTarget;
+      const currentSrc = target.src;
+
+      // วนลูปเปลี่ยนนามสกุลไฟล์ไปเรื่อยๆ จนกว่าจะเจอไฟล์ที่มีอยู่จริงในโฟลเดอร์
+      if (currentSrc.endsWith('.png')) {
+        target.src = currentSrc.replace('.png', '.jpg');
+      } else if (currentSrc.endsWith('.jpg')) {
+        target.src = currentSrc.replace('.jpg', '.jpeg');
+      } else if (currentSrc.endsWith('.jpeg')) {
+        // ✅ ลองโหลดไฟล์ .webp ต่อจาก .jpeg
+        target.src = currentSrc.replace('.jpeg', '.webp');
+      } else if (currentSrc.endsWith('.webp')) {
+        // ✅ ลองโหลดไฟล์ .HEIC ต่อจาก .webp
+        target.src = currentSrc.replace('.webp', '.HEIC');
+      } else if (currentSrc.endsWith('.HEIC')) {
+        // ✅ ลองโหลดไฟล์ .heic (ตัวพิมพ์เล็ก) เผื่อกรณีเคสเซนสิทีฟ
+        target.src = currentSrc.replace('.HEIC', '.heic');
+      } else {
+        // ถ้าลองครบทุกนามสกุลแล้วยังไม่เจอ ให้ใช้รูป Default
+        target.src = "/foods/default-food.png";
+      }
+    };
+
+    return (
+        <button 
+          onClick={() => onToggle(food)} // ✅ ใช้ onToggle จาก Props
+          className={`glass-card flex items-center gap-4 p-3 rounded-2xl transition-all ${
+            isSelected ? "ring-2 ring-primary" : "" // ✅ ใช้ isSelected จาก Props
+          }`}
+        >
+          <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0">
+            <img 
+              src={`/foods/location_${idToWord[food.location_id]}/restaurant_${idToWord[food.restaurant_id]}/${food.food_image}`} 
+              alt={food.food_name}
+              className="h-full w-full object-cover"
+              onError={handleImageError}
+            />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-sm line-clamp-1">{food.food_name}</p>
+            <p className="text-xs text-muted-foreground">{Number(food.sodium_mg).toLocaleString()} mg โซเดียม</p>
+          </div>
+        </button>
+      );
+    };
+
 const FoodLog = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,58 +141,6 @@ const FoodLog = () => {
   const filteredFoods = allFoods.filter((f) =>
     f.food_name.toLowerCase().includes(search.toLowerCase())
   );
-
-  // ✅ 4. สร้างคอมโพเนนต์ช่วยแสดงผล (แก้ Error FoodCard ใน image_e77333.png)
-  const FoodItem = ({ food }: { food: any }) => {
-    // ฟังก์ชันสำหรับจัดการเมื่อโหลดรูปไม่สำเร็จ
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      const target = e.currentTarget;
-      const currentSrc = target.src;
-
-      // วนลูปเปลี่ยนนามสกุลไฟล์ไปเรื่อยๆ จนกว่าจะเจอไฟล์ที่มีอยู่จริงในโฟลเดอร์
-      if (currentSrc.endsWith('.png')) {
-        target.src = currentSrc.replace('.png', '.jpg');
-      } else if (currentSrc.endsWith('.jpg')) {
-        target.src = currentSrc.replace('.jpg', '.jpeg');
-      } else if (currentSrc.endsWith('.jpeg')) {
-        // ✅ ลองโหลดไฟล์ .webp ต่อจาก .jpeg
-        target.src = currentSrc.replace('.jpeg', '.webp');
-      } else if (currentSrc.endsWith('.webp')) {
-        // ✅ ลองโหลดไฟล์ .HEIC ต่อจาก .webp
-        target.src = currentSrc.replace('.webp', '.HEIC');
-      } else if (currentSrc.endsWith('.HEIC')) {
-        // ✅ ลองโหลดไฟล์ .heic (ตัวพิมพ์เล็ก) เผื่อกรณีเคสเซนสิทีฟ
-        target.src = currentSrc.replace('.HEIC', '.heic');
-      } else {
-        // ถ้าลองครบทุกนามสกุลแล้วยังไม่เจอ ให้ใช้รูป Default
-        target.src = "/foods/default-food.png";
-      }
-    };
-
-    return (
-      <button 
-        onClick={() => toggleFood(food)}
-        className={`glass-card flex items-center gap-4 p-3 rounded-2xl transition-all ${
-          selectedFoods.some(f => f.food_id === food.food_id) ? "ring-2 ring-primary" : ""
-        }`}
-      >
-        <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden shrink-0">
-          <img 
-            // ✅ ดึงชื่อไฟล์จาก DB ตรงๆ ไม่ต้อง .replace ออกก่อน
-            src={`/foods/location_${idToWord[food.location_id]}/restaurant_${idToWord[food.restaurant_id]}/${food.food_image}`} 
-            alt={food.food_name}
-            className="h-full w-full object-cover"
-            // ✅ เรียกใช้ฟังก์ชันลองเปลี่ยนนามสกุลเมื่อโหลดพลาด
-            onError={handleImageError}
-          />
-        </div>
-        <div className="flex-1 text-left">
-          <p className="font-semibold text-sm line-clamp-1">{food.food_name}</p>
-          <p className="text-xs text-muted-foreground">{Number(food.sodium_mg).toLocaleString()} mg โซเดียม</p>
-        </div>
-      </button>
-    );
-  };
 
   // 4. ฟังก์ชันบันทึกข้อมูลไปยังฐานข้อมูล
   const handleMealSelect = async (mealId: string) => {
@@ -266,22 +272,41 @@ const FoodLog = () => {
     <div className="mt-4 space-y-4 pb-32">
       {search ? (
         <div className="grid gap-3">
-          {filteredFoods.map((food) => <FoodItem key={food.food_id} food={food} />)}
+          {filteredFoods.map((food) => (
+            <FoodItem 
+              key={food.food_id} 
+              food={food} 
+              // ✅ ต้องส่ง Props 2 ตัวนี้ไปด้วยเพื่อให้กดได้และไม่กะพริบ
+              isSelected={selectedFoods.some(f => f.food_id === food.food_id)}
+              onToggle={toggleFood}
+            />
+          ))}
         </div>
       ) : (
         <div className="grid gap-3">
-          {/* ✅ 3. Logic การแสดงผลรายการอาหาร */}
           {isRestaurantLocation ? (
-            // กรณีมีร้านอาหาร: กรองตามร้านที่เลือก
+            // กรณีมีร้านอาหาร
             activeRestaurantId && 
             currentLocation.restaurants[activeRestaurantId]?.foods.map((food: any) => (
-              <FoodItem key={food.food_id} food={food} />
+              <FoodItem 
+                key={food.food_id} 
+                food={food} 
+                // ✅ เพิ่ม Props ที่นี่ด้วย
+                isSelected={selectedFoods.some(f => f.food_id === food.food_id)}
+                onToggle={toggleFood}
+              />
             ))
           ) : (
-            // กรณีไม่มีร้านอาหาร (ชั้น 8 / คาเฟ่): แสดงอาหารทั้งหมดของสถานที่นั้นทันที
+            // กรณีไม่มีร้านอาหาร (ชั้น 8 / คาเฟ่)
             currentLocation?.restaurants && 
             Object.values(currentLocation.restaurants).flatMap((res: any) => res.foods).map((food: any) => (
-              <FoodItem key={food.food_id} food={food} />
+              <FoodItem 
+                key={food.food_id} 
+                food={food} 
+                // ✅ และเพิ่ม Props ที่จุดนี้ด้วย
+                isSelected={selectedFoods.some(f => f.food_id === food.food_id)}
+                onToggle={toggleFood}
+              />
             ))
           )}
         </div>
@@ -306,7 +331,7 @@ const FoodLog = () => {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSaveClick}
                 // ✅ เปลี่ยนจาก gradient-btn เป็นการระบุสีตรงๆ เพื่อป้องกันสีเพี้ยน
-                className="w-full rounded-2xl bg-primary py-4 font-heading text-lg font-bold text-primary-foreground shadow-[0_8px_30px_rgb(var(--primary)/0.3)] transition-all hover:bg-primary/90"
+                className="w-full rounded-2xl gradient-btn py-4 font-heading text-lg font-bold text-primary-foreground shadow-[0_8px_30px_rgb(var(--primary)/0.3)] transition-all gradient-btn:hover"
               >
                 บันทึกมื้ออาหาร
               </motion.button>

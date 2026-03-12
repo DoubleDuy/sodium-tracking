@@ -1,5 +1,6 @@
 <?php
 require_once './config/config.php';
+
 $db = new Connect();
 
 $user_id = $_SESSION['user_id'] ?? null;
@@ -62,13 +63,18 @@ if ($method === 'GET') {
     // 2. ดึงข้อมูลรายวัน (Daily)
     elseif ($action === 'daily') {
         $today = date('Y-m-d');
-        $sql = "SELECT li.*, f.food_name, f.sodium_mg, f.food_image, f.location_id, f.restaurant_id 
+        $sql = "SELECT li.*, f.food_name, f.sodium_mg, f.location_id, f.restaurant_id, f.food_image, dl.log_date, li.created_at 
                 FROM log_items li
                 JOIN daily_logs dl ON li.log_id = dl.log_id
                 JOIN foods f ON li.food_id = f.food_id
-                WHERE dl.user_id = :uid AND dl.log_date = :today";
+                WHERE dl.user_id = :uid 
+                AND dl.log_date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) 
+                ORDER BY li.created_at DESC";
+        
         $stmt = $db->prepare($sql);
-        $stmt->execute([':uid' => $user_id, ':today' => $today]);
+
+        $stmt->execute([':uid' => $user_id]);
+
         echo json_encode(["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
         exit;
     }

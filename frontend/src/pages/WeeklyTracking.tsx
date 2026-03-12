@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
 import api from "@/lib/axios";
+import NoData from "@/components/NoData";
 
 const limit = 2000;
 
@@ -33,11 +34,14 @@ const WeeklyTracking = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-4"
       >
-        <h2 className="font-heading text-lg font-bold text-foreground text-center">
+        <h2 className="font-heading text-lg font-bold text-foreground">
           อาหารที่คุณรับประทานไปวันนี้
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <NoData />
+            </div>
           {weeklyData.map((day, i) => {
             const isOver = day.sodium > limit;
             return (
@@ -66,18 +70,20 @@ const WeeklyTracking = () => {
         </div>
 
         {/* Total bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="flex items-center justify-between rounded-2xl p-5 shadow-lg"
-          style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(25 85% 55%))" }}
-        >
-          <p className="font-heading text-lg font-bold text-white">รวม</p>
-          <p className="font-heading text-xl font-bold text-white">
-            {totalWeekly.toLocaleString()} mg
-          </p>
-        </motion.div>
+        {weeklyData.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="flex items-center justify-between rounded-2xl p-5 shadow-lg"
+            style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(25 85% 55%))" }}
+          >
+            <p className="font-heading text-lg font-bold text-white">รวม</p>
+            <p className="font-heading text-xl font-bold text-white">
+              {totalWeekly.toLocaleString()} mg
+            </p>
+          </motion.div>
+        )}
       </motion.div>
     </PageLayout>
   );

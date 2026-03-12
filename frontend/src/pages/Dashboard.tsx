@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGri
 import { Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
+import NoData from "@/components/NoData";
 
 const features = [
   { icon: UtensilsCrossed, label: "กรอกข้อมูลอาหาร", path: "/food-log", bg: "bg-[hsl(30,90%,55%)]" },
@@ -61,7 +62,14 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <p className="text-sm text-muted-foreground">ยินดีต้อนรับ คุณ <span className="font-semibold text-foreground">{userData.full_name}</span> 👋</p>
+        <div className="px-1">
+        <p className="text-xl font-heading font-medium text-muted-foreground">
+          ยินดีต้อนรับ คุณ 
+          <span className="ml-1.5 font-bold text-[hsl(155,45%,45%)]">
+            {userData.full_name}
+          </span> 👋
+        </p>
+      </div>
 
         {/* Chart Card */}
         <div className="glass-card rounded-2xl p-5 shadow-lg">

@@ -16,9 +16,9 @@ export default {
       },
     },
     fontFamily: {
-      heading: ['Open Sans', 'sans-serif'],
-      body: ['Open Sans', 'sans-serif'],
-      sans: ["Inter", "sans-serif"],
+      sans: ['Anuphan', 'sans-serif'],
+      heading: ['Anuphan', 'sans-serif'],
+      body: ['Anuphan', 'sans-serif'],
     },
     extend: {
       colors: {

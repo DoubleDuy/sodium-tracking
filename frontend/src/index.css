@@ -15,8 +15,8 @@
     --popover: 110 20% 97%;
     --popover-foreground: 140 25% 15%;
 
-    --primary: 105 52% 71%;
-    --primary-foreground: 105 40% 15%;
+    --primary: 155 45% 45%; 
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 110 20% 89%;
     --secondary-foreground: 140 25% 15%;
@@ -32,7 +32,7 @@
 
     --border: 110 18% 84%;
     --input: 110 15% 80%;
-    --ring: 105 52% 71%;
+    --ring: 155 45% 45%;
 
     --radius: 1rem;
 
@@ -48,8 +48,8 @@
     --sidebar-border: 110 15% 90%;
     --sidebar-ring: 105 52% 71%;
 
-    --font-heading: 'Open Sans', sans-serif;
-    --font-body: 'Open Sans', sans-serif;
+    --font-heading: 'Anuphan', sans-serif;
+    --font-body: 'Anuphan', sans-serif;
   }
 
   .dark {
@@ -90,7 +90,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-body);
+    font-family: 'Anuphan', sans-serif;;
   }
 
   h1, h2, h3, h4, h5, h6 {

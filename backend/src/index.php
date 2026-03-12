@@ -59,9 +59,12 @@
             require_once 'header/reset-password.php';
             break;
 
-        // food-log
+        // foods/medicines-log
         case 'food-log':
             require_once 'food-log.php';
+            break;
+        case 'medicine-info':
+            require_once 'medicine-info.php';
             break;
         
         default:
