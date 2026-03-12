@@ -12,9 +12,24 @@ try {
     $client->addScope("profile");
 
     if(!isset($_GET['code'])) {
-        // หากยังไม่มี code ให้ Redirect ไปหน้า Login ของ Google
-        header("Location: " . filter_var($client->createAuthUrl(), FILTER_SANITIZE_URL));
-        exit;
+    // ✅ 1. ตรวจสอบก่อนว่า Backend มี Session อยู่แล้วหรือไม่
+    // หากมีแล้ว ให้ดึงข้อมูลจาก DB แล้วส่งกลับหน้าบ้านทันทีโดยไม่ต้องไป Google
+        if (isset($_SESSION['user_id'])) {
+            $stmt = $db->prepare("SELECT user_id, full_name, email, user_role FROM users WHERE user_id = :id");
+            $stmt->execute([':id' => $_SESSION['user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                $userData = urlencode(json_encode($user));
+                header("Location: http://localhost:5174/splash?user=" . $userData);
+                exit;
+            }
+        }
+
+    // หากไม่มี Session จริงๆ ค่อยพาไปหน้า Login ของ Google
+    header("Location: " . filter_var($client->createAuthUrl(), FILTER_SANITIZE_URL));
+    exit;
+
     } else {
         $client->authenticate($_GET['code']);
         $token = $client->getAccessToken();
@@ -39,14 +54,21 @@ try {
             $userId = $db->lastInsertId();
         } else {
             $userId = $user['user_id'];
+            $userRole - $user['user_role'];
         }
 
         // 3. ตั้งค่า Session
         $_SESSION['user_id'] = $userId;
         $_SESSION['full_name'] = $userInfo->name;
 
-        // 4. Redirect กลับไปยังหน้า Frontend (เปลี่ยน URL ให้ตรงกับที่ React รันอยู่)
-        header("Location: http://localhost:5174/dashboard"); 
+        $userData = urlencode(json_encode([
+            "user_id" => $userId,
+            "full_name" => $userInfo->name,
+            "email" => $userInfo->email,
+            "user_role" => $userInfoRole
+        ]));
+
+        header("Location: http://localhost:5174/splash?user=" . $userData);
         exit;
     }
 } catch (Exception $e) {

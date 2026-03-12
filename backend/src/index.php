@@ -27,6 +27,26 @@
         case 'google-callback':
             require_once 'auth/google-callback.php';
             break;
+        case 'me':
+        // ✅ ตรวจสอบจาก Session ที่ PHP เซตไว้ตอน Google Callback
+        if (isset($_SESSION['user_id'])) {
+            require_once './config/config.php';
+            $db = new Connect();
+            
+            $stmt = $db->prepare("SELECT user_id, full_name, email, user_role FROM users WHERE user_id = :id");
+            $stmt->execute([':id' => $_SESSION['user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                echo json_encode(["status" => "success", "user" => $user]);
+            } else {
+                echo json_encode(["status" => "error", "message" => "User not found"]);
+            }
+        } else {
+            http_response_code(401);
+            echo json_encode(["status" => "error", "message" => "Unauthorized"]);
+        }
+        break;
 
         // profile
         case 'edit-profile':

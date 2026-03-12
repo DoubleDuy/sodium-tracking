@@ -8,8 +8,8 @@ $password = $data['password'] ?? '';
 $full_name = $data['full_name'] ?? '';
 $gender = $data['gender'] ?? '';
 $age = $data['age'] ?? null;
-$weight = $data['weight_kg'] ?? null;
-$height = $data['height_cm'] ?? null;
+$weight_kg = $data['weight_kg'] ?? null;
+$height_cm = $data['height_cm'] ?? null;
 $role = $data['user_role'] ?? 'บุคคลทั่วไป';
 
 if(empty($email) || empty($password) || empty($full_name)) {
@@ -33,8 +33,8 @@ try {
         ':pw' => $password_hash,
         ':gender' => $gender,
         ':age' => $age,
-        ':weight' => $weight,
-        ':height' => $height,
+        ':weight' => $weight_kg,
+        ':height' => $height_cm,
         ':role' => $role
     ]);
     
