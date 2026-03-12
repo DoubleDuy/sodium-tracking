@@ -1,19 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, UserCircle, Edit3, Save, LogOut, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, UserCircle, Edit3, Save, LogOut, User, Mail, Lock, Eye, EyeOff, ChevronDown, Ruler, Weight, Calendar, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/axios";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    name: "ผู้ใช้ทดสอบ",
-    email: "user@example.com",
-  });
-  const [editProfile, setEditProfile] = useState(profile);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -23,16 +20,53 @@ const Profile = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSave = () => {
-    setProfile(editProfile);
-    setIsEditing(false);
-    toast({
-      title: "บันทึกสำเร็จ",
-      description: "ข้อมูลส่วนตัวของคุณได้รับการอัปเดตแล้ว",
-    });
+  // สร้าง State สำหรับเก็บข้อมูลจริง
+  const [profile, setProfile] = useState({
+    full_name: "",
+    email: "",
+    gender: "",
+    age: 0,
+    weight_kg: 0,
+    height_cm: 0,
+    user_role: ""
+  });
+
+  const [editProfile, setEditProfile] = useState(profile);
+
+  // 1. ดึงข้อมูลจากฐานข้อมูลเมื่อเข้าหน้า Profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get("/index.php?page=edit-profile");
+        if (response.data.status === "success") {
+          setProfile(response.data.data);
+          setEditProfile(response.data.data);
+        }
+      } catch (error) {
+        console.error("Fetch profile failed", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // 2. ฟังก์ชันบันทึกข้อมูลลงฐานข้อมูล
+  const handleSave = async () => {
+    try {
+      const response = await api.post("/index.php?page=edit-profile", editProfile);
+      if (response.data.status === "success") {
+        setProfile(editProfile);
+        setIsEditing(false);
+        toast({ title: "บันทึกสำเร็จ", description: "ข้อมูลของคุณได้รับการอัปเดตแล้ว" });
+      }
+    } catch (error) {
+      toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถบันทึกข้อมูลได้", variant: "destructive" });
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    // 1. Validation ขั้นต้น
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({ title: "กรุณากรอกข้อมูลให้ครบ", description: "กรุณากรอกรหัสผ่านทุกช่อง", variant: "destructive" });
       return;
@@ -45,10 +79,29 @@ const Profile = () => {
       toast({ title: "รหัสผ่านสั้นเกินไป", description: "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร", variant: "destructive" });
       return;
     }
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    toast({ title: "เปลี่ยนรหัสผ่านสำเร็จ", description: "รหัสผ่านของคุณได้รับการอัปเดตแล้ว" });
+
+    try {
+      // 2. เรียก API (ส่ง email ไปเป็นตัวระบุตัวตนตาม logic ของ reset-password.php เดิม)
+      const response = await api.post("/index.php?page=reset-password", {
+        current_password: currentPassword, // ✅ ส่งรหัสเดิมไปตรวจสอบ
+        new_password: newPassword
+      });
+
+      if (response.data.status === "success") {
+        // 3. ล้างค่าใน Form และแจ้งเตือน
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        toast({ title: "เปลี่ยนรหัสผ่านสำเร็จ", description: "รหัสผ่านของคุณได้รับการอัปเดตแล้ว" });
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || "เกิดข้อผิดพลาด";
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: errorMsg || "ไม่สามารถเปลี่ยนรหัสผ่านได้",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -57,10 +110,18 @@ const Profile = () => {
       description: "คุณได้ออกจากระบบเรียบร้อยแล้ว",
     });
     navigate("/");
+    localStorage.removeItem("user");
   };
 
+  const genderOptions = ["ชาย", "หญิง", "ไม่ระบุเพศ"];
+  const roleOptions = [
+    { value: "บุคคลทั่วไป", label: "บุคคลทั่วไป" },
+    { value: "อาจารย์", label: "อาจารย์" },
+    { value: "นักศึกษา", label: "นักศึกษา" },
+  ];
+
   const fields = [
-    { key: "name" as const, label: "ชื่อ-นามสกุล", icon: User, type: "text" },
+    { key: "full_name" as const, label: "ชื่อ-นามสกุล", icon: User, type: "text" },
     { key: "email" as const, label: "อีเมล", icon: Mail, type: "email" },
   ];
 
@@ -89,7 +150,7 @@ const Profile = () => {
           <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/20 shadow-lg">
             <UserCircle className="h-16 w-16 text-primary" />
           </div>
-          <p className="font-heading text-lg font-bold text-foreground">{profile.name}</p>
+          <p className="font-heading text-lg font-bold text-foreground">{profile.full_name}</p>
           <p className="text-sm text-muted-foreground">{profile.email}</p>
         </motion.div>
 
@@ -154,6 +215,135 @@ const Profile = () => {
                 )}
               </motion.div>
             ))}
+
+            {/* Gender */}
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+              <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                <Users className="h-3.5 w-3.5" />
+                เพศ
+              </label>
+              {isEditing ? (
+                <div className="relative">
+                  <select
+                    value={editProfile.gender}
+                    onChange={(e) => setEditProfile({ ...editProfile, gender: e.target.value })}
+                    className="w-full appearance-none rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  >
+                    <option value="">เลือกเพศ</option>
+                    {genderOptions.map((g) => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
+              ) : (
+                <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                  {profile.gender || "-"}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Age & Height & Weight */}
+            <div className="grid grid-cols-3 gap-3">
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  อายุ
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.age}
+                    onChange={(e) => setEditProfile({ ...editProfile, age: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.age || "-"}
+                  </p>
+                )}
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Ruler className="h-3.5 w-3.5" />
+                  ส่วนสูง (cm)
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.height_cm}
+                    onChange={(e) => setEditProfile({ ...editProfile, height_cm: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.height_cm || "-"}
+                  </p>
+                )}
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Weight className="h-3.5 w-3.5" />
+                  น้ำหนัก (kg)
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.weight_kg}
+                    onChange={(e) => setEditProfile({ ...editProfile, weight_kg: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.weight_kg || "-"}
+                  </p>
+                )}
+              </motion.div>
+            </div>
+
+            {/* User Role */}
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+              <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                <Users className="h-3.5 w-3.5" />
+                ประเภทผู้ใช้
+              </label>
+              {isEditing ? (
+                <div className="flex gap-3">
+                  {roleOptions.map((r) => (
+                    <label key={r.value} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                          editProfile.user_role === r.value
+                            ? "border-primary bg-primary"
+                            : "border-border"
+                        }`}
+                      >
+                        {editProfile.user_role === r.value && (
+                          <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <input
+                        type="radio"
+                        name="role"
+                        value={r.value}
+                        checked={editProfile.user_role === r.value}
+                        onChange={(e) => setEditProfile({ ...editProfile, user_role: e.target.value })}
+                        className="sr-only"
+                      />
+                      {r.label}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                  {profile.user_role || "-"}
+                </p>
+              )}
+            </motion.div>
           </div>
         </motion.div>
 

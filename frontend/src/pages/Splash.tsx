@@ -5,6 +5,7 @@ import logoCS from "@/assets/logo-cs.png";
 import logoPharmacy from "@/assets/logo-pharmacy.png";
 import logoNursing from "@/assets/logo-nursing.png";
 import logoSSS from "@/assets/logo-sss.png";
+import api from "@/lib/axios";
 
 const logos = [
   { src: logoCS, label: "CS Siam U." },
@@ -17,13 +18,30 @@ const Splash = () => {
   const navigate = useNavigate();
   const [show, setShow] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShow(false);
-      setTimeout(() => navigate("/dashboard"), 600);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+useEffect(() => {
+  const verifyAndPersist = async () => {
+    try {
+      // ✅ 1. เรียก API 'me' ที่เราเขียนไว้ใน index.php เพื่อเอาข้อมูล User ล่าสุด
+      const response = await api.get("/index.php?page=me");
+      
+      if (response.data.status === "success") {
+        // ✅ 2. บันทึกลง localStorage เพื่อให้ครั้งหน้าไม่ต้องล็อกอินใหม่
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        // ✅ 3. ตรวจสอบว่าทำ Pretest แล้วหรือยัง
+        const pretestDone = localStorage.getItem("pretest_done");
+        const destination = pretestDone ? "/dashboard" : "/pretest";
+        setTimeout(() => navigate(destination), 1500); 
+      }
+    } catch (error) {
+      // ถ้า Session หมดอายุหรือผิดพลาด ให้กลับไปเริ่มใหม่ที่หน้า Login
+      localStorage.removeItem("user");
+      navigate("/login");
+    }
+  };
+
+  verifyAndPersist();
+}, [navigate]);
 
   return (
     <AnimatePresence>
@@ -72,7 +90,7 @@ const Splash = () => {
             className="text-center"
           >
             <h1 className="font-heading text-3xl font-bold text-foreground">
-              SodiumTracking
+              Desalt DeNa
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               ติดตามปริมาณโซเดียมของคุณอย่างง่ายดาย

@@ -1,19 +1,29 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
+import api from "@/lib/axios";
 
 const limit = 2000;
 
-const weeklyData = [
-  { date: "01", month: "มีนา", sodium: 3500 },
-  { date: "02", month: "มีนา", sodium: 1800 },
-  { date: "03", month: "มีนา", sodium: 3500 },
-  { date: "04", month: "มีนา", sodium: 2100 },
-  { date: "05", month: "มีนา", sodium: 3500 },
-  { date: "05", month: "มีนา", sodium: 1500 },
-  { date: "06", month: "มีนา", sodium: 3500 },
-];
-
 const WeeklyTracking = () => {
+  
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchWeekly = async () => {
+      const res = await api.get("/index.php?page=food-log&action=weekly");
+      if (res.data.status === "success") {
+        const formatted = res.data.data.map((d: any) => ({
+          date: d.log_date.split('-')[2],
+          month: "มีนา", // หรือทำตัวแปลงเดือน
+          sodium: Number(d.total_sodium_daily)
+        }));
+        setWeeklyData(formatted);
+      }
+    };
+    fetchWeekly();
+  }, []);
+
   const totalWeekly = weeklyData.reduce((sum, d) => sum + d.sodium, 0);
 
   return (

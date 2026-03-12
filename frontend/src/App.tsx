@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Splash from "./pages/Splash";
-import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import DailyTracking from "./pages/DailyTracking";
 import WeeklyTracking from "./pages/WeeklyTracking";
@@ -15,6 +15,7 @@ import Medicine from "./pages/Medicine";
 import Points from "./pages/Points";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +27,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Auth />} />
           <Route path="/splash" element={<Splash />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/daily" element={<DailyTracking />} />
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/points" element={<Points />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

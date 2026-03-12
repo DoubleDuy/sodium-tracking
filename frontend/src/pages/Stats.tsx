@@ -1,15 +1,33 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Cell } from "recharts";
 import PageLayout from "@/components/PageLayout";
-
-const monthlyData = [
-  { month: "ม.ค.", sodium: 72000, color: "hsl(30, 90%, 55%)" },
-  { month: "ก.พ.", sodium: 68000, color: "hsl(0, 80%, 55%)" },
-  { month: "มี.ค.", sodium: 45000, color: "hsl(120, 60%, 55%)" },
-];
+import api from "@/lib/axios";
 
 const Stats = () => {
-  const avgDaily = Math.round(monthlyData.reduce((s, d) => s + d.sodium, 0) / (monthlyData.length * 30));
+
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const res = await api.get("/index.php?page=food-log&action=stats");
+      if (res.data.status === "success") {
+        // ✅ เพิ่ม .map เพื่อใส่สี (color) เข้าไปในแต่ละตัวแปร entry
+        const dataWithColors = res.data.data.map((item: any, index: number) => ({
+          ...item,
+          sodium: Number(item.sodium),
+          // กำหนดสีตรงนี้ เช่น สลับสีตามลำดับ หรือใช้สีเดียวทั้งหมด
+          color: index % 2 === 0 ? "hsl(25 90% 50%)" : "hsl(155 55% 40%)" 
+        }));
+        setMonthlyData(dataWithColors);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const avgDaily = monthlyData.length > 0 
+    ? Math.round(monthlyData.reduce((s, d) => s + (Number(d.sodium) || 0), 0) / (monthlyData.length * 30))
+    : 0; // ✅ ป้องกัน NaN ถ้าไม่มีข้อมูล
 
   return (
     <PageLayout>
@@ -46,7 +64,7 @@ const Stats = () => {
                 />
                 <Bar dataKey="sodium" radius={[4, 4, 0, 0]}>
                   {monthlyData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell key={`cell-${index}`} fill="hsl(25 90% 50%)" />
                   ))}
                 </Bar>
               </BarChart>

@@ -1,20 +1,16 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Gift, Trophy } from "lucide-react";
+import { ArrowLeft, Star, Trophy, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
+import StreakCalendar from "@/components/StreakCalendar";
 import infographicRewards from "@/assets/infographic-rewards.jpg";
-
-const rewards = [
-  { name: "เข็มกลัด", points: 500, emoji: "📌" },
-  { name: "สติกเกอร์เซ็ต", points: 800, emoji: "🏷️" },
-  { name: "ปากกา", points: 1000, emoji: "🖊️" },
-  { name: "สบู่กระดาษ", points: 1200, emoji: "🧼" },
-  { name: "กระเป๋าผ้า", points: 1500, emoji: "👜" },
-];
+// Mock: tracked days this month (1-based day numbers)
+const trackedDays = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const Points = () => {
   const navigate = useNavigate();
   const currentPoints = 750;
+  const earnedPoints = Math.floor(trackedDays.length / 3);
 
   return (
     <PageLayout>
@@ -49,13 +45,22 @@ const Points = () => {
           <p className="mt-1 text-xs text-white/60">คะแนน</p>
         </motion.div>
 
-        {/* Rewards */}
-        <div>
+        {/* Streak tracking table */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass-card rounded-2xl p-5 shadow-lg"
+        >
           <h2 className="font-heading text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Gift className="h-5 w-5 text-primary" />
-            ของรางวัล
+            <Flame className="h-5 w-5 text-destructive" />
+            ตารางสะสมแต้ม
           </h2>
+          <StreakCalendar trackedDays={trackedDays} currentMonth={new Date()} />
+        </motion.div>
 
+        {/* Rewards */}
+        <div className="space-y-3">
           {/* Infographic */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -69,41 +74,6 @@ const Points = () => {
               className="w-full h-auto object-contain"
             />
           </motion.div>
-          <div className="space-y-3">
-            {rewards.map((reward, i) => {
-              const canRedeem = currentPoints >= reward.points;
-              return (
-                <motion.div
-                  key={reward.name}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className="glass-card flex items-center gap-4 rounded-2xl p-4 shadow-md"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
-                    {reward.emoji}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-heading text-sm font-semibold text-foreground">{reward.name}</p>
-                    <div className="mt-1 flex items-center gap-1">
-                      <Star className="h-3 w-3 text-yellow-500" />
-                      <span className="text-xs text-muted-foreground">{reward.points.toLocaleString()} คะแนน</span>
-                    </div>
-                  </div>
-                  <button
-                    className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-                      canRedeem
-                        ? "gradient-btn text-primary-foreground shadow-md"
-                        : "bg-secondary text-muted-foreground cursor-not-allowed"
-                    }`}
-                    disabled={!canRedeem}
-                  >
-                    {canRedeem ? "แลก" : "ยังไม่พอ"}
-                  </button>
-                </motion.div>
-              );
-            })}
-          </div>
         </div>
       </motion.div>
     </PageLayout>

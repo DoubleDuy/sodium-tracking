@@ -50,6 +50,17 @@
 
     --font-heading: 'Open Sans', sans-serif;
     --font-body: 'Open Sans', sans-serif;
+<<<<<<< HEAD
+=======
+    
+    --reward-green: 122 39% 56%;
+    --reward-orange: 27 100% 94%;
+    --reward-blue: 207 90% 94%;
+    --reward-pink: 340 82% 94%;
+    --reward-brown: 20 22% 93%;
+    --btn-disabled: 0 0% 88%;
+    --btn-disabled-text: 0 0% 62%;
+>>>>>>> 6261355 (update)
   }
 
   .dark {
@@ -112,4 +123,8 @@
     backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 6261355 (update)

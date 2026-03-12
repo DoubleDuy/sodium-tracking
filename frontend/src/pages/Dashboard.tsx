@@ -3,6 +3,7 @@ import { UtensilsCrossed, BookOpen, Pill, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import { Navigate } from "react-router-dom";
 
 const chartData = [
   { day: "จ.", sodium: 2100 },
@@ -24,6 +25,15 @@ const features = [
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  // 1. ดึงข้อมูลและตรวจสอบ
+  const userString = localStorage.getItem("user");
+  const userData = userString ? JSON.parse(userString) : null;
+
+  // 2. ถ้าไม่มีข้อมูล ให้เด้งกลับไปหน้า Login (ป้องกันหน้าขาว)
+  if (!userData) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <PageLayout>
       <motion.div
@@ -31,7 +41,7 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <p className="text-sm text-muted-foreground">ยินดีต้อนรับ คุณ <span className="font-semibold text-foreground">Habibi Wasabi</span> 👋</p>
+        <p className="text-sm text-muted-foreground">ยินดีต้อนรับ คุณ <span className="font-semibold text-foreground">{userData.full_name}</span> 👋</p>
 
         {/* Chart Card */}
         <div className="glass-card rounded-2xl p-5 shadow-lg">

@@ -1,4 +1,7 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+
+/**@type {import('tailwindcss').Config}*/
 
 export default {
   darkMode: ["class"],
@@ -15,6 +18,7 @@ export default {
     fontFamily: {
       heading: ['Open Sans', 'sans-serif'],
       body: ['Open Sans', 'sans-serif'],
+      sans: ["Inter", "sans-serif"],
     },
     extend: {
       colors: {
@@ -24,8 +28,8 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "hsl(var(--primary) / <alpha-value>)", 
+          foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -40,8 +44,8 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
+          foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -61,8 +65,8 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        "gradient-start": "hsl(var(--gradient-start))",
-        "gradient-end": "hsl(var(--gradient-end))",
+        "gradient-start": "hsl(var(--gradient-start) / <alpha-value>))",
+        "gradient-end": "hsl(var(--gradient-end) / <alpha-value>))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -93,5 +97,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

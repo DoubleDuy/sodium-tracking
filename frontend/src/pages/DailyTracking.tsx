@@ -1,23 +1,40 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Plus } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
-
-const todayFoods = [
-  { name: "ผัดไทย", meal: "มื้อเช้า", sodium: 500, color: "bg-amber-200" },
-  { name: "ผัดผักบุ้ง", meal: "มื้อเช้า", sodium: 1000, color: "bg-amber-200" },
-  { name: "แกงเขียวหวาน", meal: "มื้อเช้า", sodium: 1000, color: "bg-amber-200" },
-  { name: "ผัดไทย", meal: "มื้อกลางวัน", sodium: 500, color: "bg-sky-200" },
-  { name: "ผัดผักบุ้ง", meal: "มื้อกลางวัน", sodium: 1000, color: "bg-sky-200" },
-  { name: "แกงเขียวหวาน", meal: "มื้อกลางวัน", sodium: 1000, color: "bg-sky-200" },
-  { name: "ผัดไทย", meal: "มื้อเย็น", sodium: 500, color: "bg-purple-200" },
-  { name: "ผัดผักบุ้ง", meal: "มื้อเย็น", sodium: 1000, color: "bg-purple-200" },
-  { name: "แกงเขียวหวาน", meal: "มื้อเย็น", sodium: 1000, color: "bg-purple-200" },
-];
+import api from "@/lib/axios";
 
 const DailyTracking = () => {
-  const totalSodium = todayFoods.reduce((sum, f) => sum + f.sodium, 0);
+  
+  const [todayFoods, setTodayFoods] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const fetchDaily = async () => {
+      const res = await api.get("/index.php?page=food-log&action=daily");
+      if (res.data.status === "success") setTodayFoods(res.data.data);
+    };
+    fetchDaily();
+  }, []);
+
+  const totalSodium = todayFoods.reduce((sum, f) => sum + f.sodium_mg, 0);
   const limit = 2000;
   const isOver = totalSodium > limit;
+
+  const idToWord: Record<number, string> = { 
+  0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 
+  7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve", 
+  13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen"
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    const currentSrc = target.src;
+    if (currentSrc.endsWith('.png')) target.src = currentSrc.replace('.png', '.jpg');
+    else if (currentSrc.endsWith('.jpg')) target.src = currentSrc.replace('.jpg', '.jpeg');
+    else if (currentSrc.endsWith('.jpeg')) target.src = currentSrc.replace('.jpeg', '.webp');
+    else if (currentSrc.endsWith('.webp')) target.src = currentSrc.replace('.webp', '.HEIC');
+    else target.src = "/foods/default-food.png";
+  };
 
   return (
     <PageLayout>
@@ -61,19 +78,30 @@ const DailyTracking = () => {
         <div className="space-y-3">
           {todayFoods.map((food, i) => (
             <motion.div
-              key={`${food.name}-${food.meal}-${i}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.04 }}
+              key={i}
               className="glass-card flex items-center gap-4 rounded-2xl p-4 shadow-sm"
             >
-              <div className={`h-10 w-10 rounded-lg ${food.color}`} />
-              <div className="flex-1">
-                <p className="font-heading font-semibold text-foreground">{food.name}</p>
-                <p className="text-xs text-muted-foreground">{food.meal}</p>
+              {/* ✅ แก้ไขจาก <div className={food.color} /> เป็น <img> */}
+              <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden shrink-0">
+                <img 
+                  src={`/foods/location_${idToWord[food.location_id]}/restaurant_${idToWord[food.restaurant_id]}/${food.food_image}`} 
+                  alt={food.food_name}
+                  className="h-full w-full object-cover"
+                  onError={handleImageError}
+                />
               </div>
+              
+              <div className="flex-1">
+                <p className="font-heading font-semibold text-foreground">{food.food_name}</p>
+                {/* ✅ แสดงมื้ออาหารจากข้อมูลจริง */}
+                <p className="text-xs text-muted-foreground">
+                  {food.meal_type === 'breakfast' ? '🌅 มื้อเช้า' : 
+                  food.meal_type === 'lunch' ? '☀️ มื้อกลางวัน' : '🌙 มื้อเย็น'}
+                </p>
+              </div>
+              
               <p className="font-heading font-bold text-foreground">
-                {food.sodium.toLocaleString()} mg
+                {Number(food.sodium_mg).toLocaleString()} mg
               </p>
             </motion.div>
           ))}
