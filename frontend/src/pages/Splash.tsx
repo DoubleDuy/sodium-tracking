@@ -28,8 +28,10 @@ useEffect(() => {
         // ✅ 2. บันทึกลง localStorage เพื่อให้ครั้งหน้าไม่ต้องล็อกอินใหม่
         localStorage.setItem("user", JSON.stringify(response.data.user));
         
-        // ✅ 3. พาไปหน้า Dashboard
-        setTimeout(() => navigate("/dashboard"), 1500); 
+        // ✅ 3. ตรวจสอบว่าทำ Pretest แล้วหรือยัง
+        const pretestDone = localStorage.getItem("pretest_done");
+        const destination = pretestDone ? "/dashboard" : "/pretest";
+        setTimeout(() => navigate(destination), 1500); 
       }
     } catch (error) {
       // ถ้า Session หมดอายุหรือผิดพลาด ให้กลับไปเริ่มใหม่ที่หน้า Login
