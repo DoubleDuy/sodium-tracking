@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast"; 
 import PageLayout from "@/components/PageLayout";
@@ -22,6 +22,7 @@ const FoodLog = () => {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [selectedFoods, setSelectedFoods] = useState<any[]>([]); // เก็บ Object อาหารที่เลือก
+  const [isShopOpen, setIsShopOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // ✅ 1. เพิ่ม State สำหรับเปิด/ปิด Modal มื้ออาหาร
   const [showMealModal, setShowMealModal] = useState(false);
@@ -207,22 +208,59 @@ const FoodLog = () => {
 
     {/* ✅ 2. แสดง Sub-tabs เฉพาะสถานที่ที่มี restaurant (โรงเย็น/โรงร้อน) */}
     {!search && isRestaurantLocation && (
-      <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide border-b border-border/50">
-        {Object.values(currentLocation.restaurants).map((res: any) => (
-          <button
-            key={res.restaurant_id}
-            onClick={() => setActiveRestaurantId(res.restaurant_id)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-              activeRestaurantId === res.restaurant_id
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-transparent border-border text-muted-foreground"
-            }`}
-          >
-            🏪 {res.restaurant_name}
-          </button>
-        ))}
-      </div>
-    )}
+    <div className="relative w-full max-w-xs mb-4">
+      {/* ปุ่มกด Dropdown */}
+      <button
+        onClick={() => setIsShopOpen(!isShopOpen)}
+        className="flex w-full items-center justify-between rounded-2xl border border-border bg-card/50 p-4 text-sm font-medium text-foreground shadow-sm backdrop-blur-md transition-all hover:bg-secondary/50"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🏪</span>
+          {/* แสดงชื่อร้านที่เลือกจาก activeRestaurantId จริงในฐานข้อมูล */}
+          {activeRestaurantId 
+            ? currentLocation.restaurants[activeRestaurantId]?.restaurant_name 
+            : "เลือกร้านค้า"}
+        </div>
+        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isShopOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* รายการร้านค้าที่ดึงมาจาก Database */}
+      <AnimatePresence>
+        {isShopOpen && (
+          <>
+            {/* Overlay สำหรับปิดเมื่อกดข้างนอก */}
+            <div className="fixed inset-0 z-40" onClick={() => setIsShopOpen(false)} />
+            
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-card/90 shadow-xl backdrop-blur-xl"
+            >
+              <div className="max-h-60 overflow-y-auto p-1 scrollbar-hide">
+                {Object.values(currentLocation.restaurants).map((res: any) => (
+                  <button
+                    key={res.restaurant_id}
+                    onClick={() => {
+                      setActiveRestaurantId(res.restaurant_id); // ✅ อัปเดต ID ร้านเพื่อกรองอาหาร
+                      setIsShopOpen(false); // ปิด Dropdown
+                    }}
+                    className={`flex w-full items-center rounded-xl px-4 py-3 text-sm transition-colors ${
+                      activeRestaurantId === res.restaurant_id
+                        ? "bg-primary text-white"
+                        : "text-foreground hover:bg-primary/10"
+                    }`}
+                  >
+                    {res.restaurant_name}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )}
 
     {/* 3. รายการอาหาร */}
     <div className="mt-4 space-y-4 pb-32">

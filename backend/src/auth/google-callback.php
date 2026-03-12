@@ -12,23 +12,9 @@ try {
     $client->addScope("profile");
 
     if(!isset($_GET['code'])) {
-    // ✅ 1. ตรวจสอบก่อนว่า Backend มี Session อยู่แล้วหรือไม่
-    // หากมีแล้ว ให้ดึงข้อมูลจาก DB แล้วส่งกลับหน้าบ้านทันทีโดยไม่ต้องไป Google
-        if (isset($_SESSION['user_id'])) {
-            $stmt = $db->prepare("SELECT user_id, full_name, email, user_role FROM users WHERE user_id = :id");
-            $stmt->execute([':id' => $_SESSION['user_id']]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                $userData = urlencode(json_encode($user));
-                header("Location: http://localhost:5174/splash?user=" . $userData);
-                exit;
-            }
-        }
-
-    // หากไม่มี Session จริงๆ ค่อยพาไปหน้า Login ของ Google
-    header("Location: " . filter_var($client->createAuthUrl(), FILTER_SANITIZE_URL));
-    exit;
+        // เพื่อให้ระบบวิ่งไปหา Google ทุกครั้งที่กดปุ่ม
+        header("Location: " . filter_var($client->createAuthUrl(), FILTER_SANITIZE_URL));
+        exit;
 
     } else {
         $client->authenticate($_GET['code']);
@@ -38,13 +24,13 @@ try {
         $oauth = new Google_Service_Oauth2($client);
         $userInfo = $oauth->userinfo->get();
 
-        // 1. ตรวจสอบว่ามี User นี้หรือยัง (อิงตาม sodium_tracking.sql)
+        // ตรวจสอบ User ใน DB
         $stmt = $db->prepare("SELECT * FROM users WHERE google_id = :google_id OR email = :email");
         $stmt->execute([':google_id' => $userInfo->id, ':email' => $userInfo->email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if(!$user) {
-            // 2. ถ้ายังไม่มี ให้บันทึกใหม่ (ตัด picture ออกตาม sql ที่ให้มา)
+            // สำหรับผู้ใช้ใหม่
             $stmt = $db->prepare("INSERT INTO users (google_id, full_name, email, user_role) VALUES (:google_id, :name, :email, 'บุคคลทั่วไป')");
             $stmt->execute([
                 ':google_id' => $userInfo->id,
@@ -52,22 +38,24 @@ try {
                 ':email' => $userInfo->email
             ]);
             $userId = $db->lastInsertId();
+            $userRole = 'บุคคลทั่วไป';
         } else {
+            // สำหรับผู้ใช้เดิม
             $userId = $user['user_id'];
-            $userRole - $user['user_role'];
+            $userRole = $user['user_role'];
         }
 
-        // 3. ตั้งค่า Session
         $_SESSION['user_id'] = $userId;
-        $_SESSION['full_name'] = $userInfo->name;
+        $_SESSION['user_role'] = $userRole;
 
         $userData = urlencode(json_encode([
             "user_id" => $userId,
             "full_name" => $userInfo->name,
             "email" => $userInfo->email,
-            "user_role" => $userInfoRole
+            "user_role" => $userRole
         ]));
 
+        // ✅ เพิ่มบรรทัดนี้ เพื่อส่งผู้ใช้กลับไปที่ React พร้อมข้อมูล
         header("Location: http://localhost:5174/splash?user=" . $userData);
         exit;
     }

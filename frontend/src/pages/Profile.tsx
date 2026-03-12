@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, UserCircle, Edit3, Save, LogOut, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, UserCircle, Edit3, Save, LogOut, User, Mail, Lock, Eye, EyeOff, ChevronDown, Ruler, Weight, Calendar, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -104,14 +104,29 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    toast({
-      title: "ออกจากระบบ",
-      description: "คุณได้ออกจากระบบเรียบร้อยแล้ว",
-    });
-    navigate("/");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    try {
+      // ✅ เรียก API เพื่อล้าง Session ที่ฝั่ง Backend
+      await api.post("/index.php?page=logout"); 
+    } catch (error) {
+      console.error("Backend logout failed", error);
+    } finally {
+      // ✅ ล้างข้อมูลในเครื่องและพาไปหน้าแรก
+      localStorage.removeItem("user");
+      toast({
+        title: "ออกจากระบบ",
+        description: "คุณได้ออกจากระบบเรียบร้อยแล้ว",
+      });
+      navigate("/");
+    }
   };
+
+  const genderOptions = ["ชาย", "หญิง", "ไม่ระบุเพศ"];
+  const roleOptions = [
+    { value: "บุคคลทั่วไป", label: "บุคคลทั่วไป" },
+    { value: "อาจารย์", label: "อาจารย์" },
+    { value: "นักศึกษา", label: "นักศึกษา" },
+  ];
 
   const fields = [
     { key: "full_name" as const, label: "ชื่อ-นามสกุล", icon: User, type: "text" },
@@ -208,6 +223,135 @@ const Profile = () => {
                 )}
               </motion.div>
             ))}
+
+            {/* Gender */}
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+              <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                <Users className="h-3.5 w-3.5" />
+                เพศ
+              </label>
+              {isEditing ? (
+                <div className="relative">
+                  <select
+                    value={editProfile.gender}
+                    onChange={(e) => setEditProfile({ ...editProfile, gender: e.target.value })}
+                    className="w-full appearance-none rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  >
+                    <option value="">เลือกเพศ</option>
+                    {genderOptions.map((g) => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
+              ) : (
+                <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                  {profile.gender || "-"}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Age & Height & Weight */}
+            <div className="grid grid-cols-3 gap-3">
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  อายุ
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.age}
+                    onChange={(e) => setEditProfile({ ...editProfile, age: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.age || "-"}
+                  </p>
+                )}
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Ruler className="h-3.5 w-3.5" />
+                  ส่วนสูง (cm)
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.height_cm}
+                    onChange={(e) => setEditProfile({ ...editProfile, height_cm: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.height_cm || "-"}
+                  </p>
+                )}
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                  <Weight className="h-3.5 w-3.5" />
+                  น้ำหนัก (kg)
+                </label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editProfile.weight_kg}
+                    onChange={(e) => setEditProfile({ ...editProfile, weight_kg: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                  />
+                ) : (
+                  <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                    {profile.weight_kg || "-"}
+                  </p>
+                )}
+              </motion.div>
+            </div>
+
+            {/* User Role */}
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+              <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1.5">
+                <Users className="h-3.5 w-3.5" />
+                ประเภทผู้ใช้
+              </label>
+              {isEditing ? (
+                <div className="flex gap-3">
+                  {roleOptions.map((r) => (
+                    <label key={r.value} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                          editProfile.user_role === r.value
+                            ? "border-primary bg-primary"
+                            : "border-border"
+                        }`}
+                      >
+                        {editProfile.user_role === r.value && (
+                          <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <input
+                        type="radio"
+                        name="role"
+                        value={r.value}
+                        checked={editProfile.user_role === r.value}
+                        onChange={(e) => setEditProfile({ ...editProfile, user_role: e.target.value })}
+                        className="sr-only"
+                      />
+                      {r.label}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl bg-secondary/30 px-4 py-2.5 text-sm font-medium text-foreground">
+                  {profile.user_role || "-"}
+                </p>
+              )}
+            </motion.div>
           </div>
         </motion.div>
 

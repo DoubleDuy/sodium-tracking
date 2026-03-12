@@ -27,6 +27,9 @@
         case 'google-callback':
             require_once 'auth/google-callback.php';
             break;
+        case 'logout':
+            require_once 'auth/logout.php';
+            break;
         case 'me':
         // ✅ ตรวจสอบจาก Session ที่ PHP เซตไว้ตอน Google Callback
         if (isset($_SESSION['user_id'])) {
