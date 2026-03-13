@@ -29,7 +29,8 @@ try {
                 "user_id" => (int)$user['user_id'],
                 "full_name" => $user['full_name'],
                 "email" => $user['email'],
-                "user_role" => $user['user_role']
+                "user_role" => $user['user_role'],
+                "pretest_done" => (int)$user['pretest_done']
             ]
         ]);
     } else {

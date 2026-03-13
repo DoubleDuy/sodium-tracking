@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 
 interface StreakCalendarProps {
   trackedDays: number[];
+  pointDates: number[];
   currentMonth: Date;
 }
 
@@ -17,7 +18,7 @@ const THAI_DAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
-const StreakCalendar = ({ trackedDays, currentMonth: initialMonth }: StreakCalendarProps) => {
+const StreakCalendar = ({ trackedDays, pointDates, currentMonth: initialMonth }: StreakCalendarProps) => {
   const [viewDate, setViewDate] = useState(initialMonth);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -52,73 +53,76 @@ const StreakCalendar = ({ trackedDays, currentMonth: initialMonth }: StreakCalen
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   return (
-    <div>
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-5">
-        <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground">
-          <ChevronLeft className="h-4 w-4" />
+    <div className="w-full">
+      {/* 1. ส่วนหัวเดือนและปี (ดีไซน์เดิม) */}
+      <div className="flex items-center justify-between mb-6">
+        <button onClick={prevMonth} className="p-2 text-muted-foreground/50 hover:text-foreground">
+          <ChevronLeft className="h-5 w-5" />
         </button>
-        <h3 className="font-heading text-base font-semibold text-foreground">
+        <h3 className="font-heading text-lg font-bold text-foreground">
           {THAI_MONTHS[month]} {year + 543}
         </h3>
-        <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground">
-          <ChevronRight className="h-4 w-4" />
+        <button onClick={nextMonth} className="p-2 text-muted-foreground/50 hover:text-foreground">
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Day headers */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
+      {/* 2. หัวข้อวันในสัปดาห์ */}
+      <div className="grid grid-cols-7 gap-1 mb-4">
         {THAI_DAYS.map((d) => (
-          <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-1.5">
+          <div key={d} className="text-center text-xs font-medium text-muted-foreground opacity-70 py-1">
             {d}
           </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1.5">
+      {/* 3. ตารางวันที่ */}
+      <div className="grid grid-cols-7 gap-y-3 gap-x-1">
         {cells.map((day, idx) => {
           if (day === null) return <div key={`empty-${idx}`} />;
 
           const isTracked = trackedDays.includes(day);
-          const isPointDay = pointDays.includes(day);
+          const isPointDay = pointDates.includes(day);
           const isToday = isCurrentMonth && day === today.getDate();
 
           return (
-            <motion.div
-              key={day}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: day * 0.008 }}
-              className={`relative flex h-10 w-full items-center justify-center rounded-xl text-sm font-medium transition-all ${
-                isTracked
-                  ? "bg-primary/20 text-primary"
-                  : isToday
-                  ? "bg-accent/60 text-foreground"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {isTracked ? (
-                <Check className="h-4 w-4 stroke-[2.5]" />
-              ) : (
-                <span>{day}</span>
-              )}
-              {isPointDay && (
-                <span className="absolute -top-1.5 -right-0.5 text-sm">⭐</span>
-              )}
-            </motion.div>
+            <div key={day} className="relative flex justify-center items-center h-10 w-full">
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                // ✅ ขั้นตอนที่ 1: กำหนดให้กรอบเป็น relative เพื่อให้ดาวยึดตามขอบนี้
+                className={`relative flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition-all ${
+                  isTracked
+                    ? "bg-[hsl(155,45%,45%)]/20 text-[hsl(155,45%,45%)]" 
+                    : isToday
+                    ? "bg-[hsl(154,49%,67%)] text-white" 
+                    : "text-muted-foreground/80"
+                }`}
+              >
+                {isTracked ? <Check className="h-5 w-5 stroke-[3]" /> : <span>{day}</span>}
+                
+                {/* ✅ ขั้นตอนที่ 2: จัดวางดาวให้ติดมุมขวาบน และใช้ค่าลบเล็กน้อยเพื่อให้ดาวเกาะอยู่บนขอบพอดี */}
+                {isPointDay && (
+                  <div className="absolute -top-1.5 -right-1.5 z-10 pointer-events-none">
+                    <Star 
+                      className="h-5 w-5 fill-yellow-400 text-yellow-500 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" 
+                    />
+                  </div>
+                )}
+              </motion.div>
+            </div>
           );
         })}
       </div>
 
-      {/* Summary */}
-      <div className="mt-5 flex items-center justify-between rounded-xl border border-border/50 px-4 py-3">
-        <span className="text-sm text-muted-foreground">
-          บันทึกแล้ว <span className="font-semibold text-foreground">{trackedDays.length}</span> วัน
+      {/* 4. สรุปผลด้านล่าง (ตามดีไซน์ image_f5f8ba.png) */}
+      <div className="mt-8 flex items-center justify-between rounded-2xl border border-muted bg-muted/10 px-5 py-4">
+        <span className="text-sm font-medium text-muted-foreground">
+          บันทึกแล้ว <span className="text-foreground font-bold">{trackedDays.length}</span> วัน
         </span>
-        <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-          <Star className="h-4 w-4" />
-          <span>{streakCount} แต้ม</span>
+        <div className="flex items-center gap-1.5 text-sm font-bold text-[hsl(155,45%,45%)]">
+          <Star className="h-4 w-4 fill-current" />
+          <span>{pointDates.length} แต้ม</span>
         </div>
       </div>
     </div>

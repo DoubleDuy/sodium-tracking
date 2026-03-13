@@ -30,6 +30,15 @@ const Dashboard = () => {
 
   // ✅ 2. ดึงข้อมูลรายสัปดาห์จริงจาก API
   useEffect(() => {
+    const userString = localStorage.getItem("user");
+    const userData = userString ? JSON.parse(userString) : null;
+
+    // ✅ ถ้ามี User แต่ยังไม่ทำ Pretest ให้เด้งกลับไปหน้าแบบทดสอบ
+    if (userData && userData.pretest_done === 0) {
+      navigate("/pretest", { replace: true });
+      return;
+    }
+
     const fetchWeeklyData = async () => {
       try {
         const res = await api.get("/index.php?page=food-log&action=weekly");
@@ -48,7 +57,7 @@ const Dashboard = () => {
       }
     };
     fetchWeeklyData();
-  }, []);
+  }, [navigate]);
 
   // 2. ถ้าไม่มีข้อมูล ให้เด้งกลับไปหน้า Login (ป้องกันหน้าขาว)
   if (!userData) {

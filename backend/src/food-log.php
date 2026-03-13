@@ -104,42 +104,90 @@ if ($method === 'GET') {
         exit;
     }
 
+    elseif ($action === 'daily_all') {
+        // ดึงข้อมูลการกินทั้งหมดเพื่อมาคำนวณดาวทุกๆ 3 รายการ
+        $sql = "SELECT li.created_at 
+                FROM log_items li
+                JOIN daily_logs dl ON li.log_id = dl.log_id
+                WHERE dl.user_id = :uid 
+                ORDER BY li.created_at ASC";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':uid' => $user_id]);
+        echo json_encode(["status" => "success", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        exit;
+    }
+
 }
 
 elseif ($method === 'POST') {
-    // บันทึกการกินอาหารลงใน daily_logs และ log_items
     $data = json_decode(file_get_contents("php://input"), true);
-    $selected_foods = $data['foods']; // Array ของ food_id
-    $meal_type = $data['meal_type'] ?? 'breakfast';
-    $log_date = date('Y-m-d');
+    $action = $_GET['action'] ?? 'save_food';
 
-    try {
-        $db->beginTransaction();
+    // ✅ กรณีที่ 1: บันทึกแต้มจากแบบทดสอบ (Pretest / Posttest)
+    if ($action === 'submit_test') {
+        $test_type = $data['test_type']; 
+        $current_date = date('Y-m-d');
+        
+        // เงื่อนไขวันที่: Pretest (18 มี.ค. 69), Posttest (20-31 มี.ค. 69)
+        $is_valid_date = false;
+        if ($test_type === 'pre' && $current_date === '2026-03-13') $is_valid_date = true;
+        if ($test_type === 'post' && ($current_date >= '2026-03-20' && $current_date <= '2026-03-31')) $is_valid_date = true;
 
-        // 1. ตรวจสอบหรือสร้าง daily_log สำหรับวันนี้
-        $stmt = $db->prepare("INSERT INTO daily_logs (user_id, log_date) 
-                             VALUES (:uid, :date) 
-                             ON DUPLICATE KEY UPDATE log_id=LAST_INSERT_ID(log_id)");
-        $stmt->execute([':uid' => $user_id, ':date' => $log_date]);
-        $log_id = $db->lastInsertId();
-
-        // 2. บันทึกรายการอาหารลงใน log_items
-        $total_added_sodium = 0;
-        foreach ($selected_foods as $food) {
-        $stmt = $db->prepare("INSERT INTO log_items (log_id, food_id, quantity, meal_type) VALUES (:lid, :fid, 1, :mtype)");
-        $stmt->execute([':lid' => $log_id, ':fid' => $food['food_id'], ':mtype' => $meal_type]);
-            $total_added_sodium += $food['sodium_mg'];
+        if ($is_valid_date) {
+            $field = ($test_type === 'pre') ? 'pretest_done' : 'posttest_done';
+            // เพิ่ม 1 แต้ม และป้องกันการทำซ้ำด้วยเงื่อนไข $field = 0
+            $stmt = $db->prepare("UPDATE users SET $field = 1, total_points = total_points + 1 WHERE user_id = :uid AND $field = 0");
+            $stmt->execute([':uid' => $user_id]);
+            
+            if ($stmt->rowCount() > 0) {
+                echo json_encode(["status" => "success", "message" => "ได้รับ 1 แต้มเรียบร้อยแล้ว"]);
+            } else {
+                echo json_encode(["status" => "error", "message" => "คุณเคยรับแต้มส่วนนี้ไปแล้ว"]);
+            }
+        } else {
+            echo json_encode(["status" => "error", "message" => "ไม่อยู่ในช่วงเวลาที่กำหนด"]);
         }
+        exit;
+    }
 
-        // 3. อัปเดตยอดรวมโซเดียมใน daily_logs
-        $stmt = $db->prepare("UPDATE daily_logs SET total_sodium_daily = total_sodium_daily + :sodium WHERE log_id = :lid");
-        $stmt->execute([':sodium' => $total_added_sodium, ':lid' => $log_id]);
+    // ✅ กรณีที่ 2: บันทึกรายการอาหาร และตรวจสอบแต้มสะสมทุก 3 ครั้ง
+    elseif ($action === 'save_food') {
+        $selected_foods = $data['foods'];
+        $meal_type = $data['meal_type'] ?? 'breakfast';
+        $log_date = date('Y-m-d');
 
-        $db->commit();
-        echo json_encode(["status" => "success", "message" => "บันทึกข้อมูลเรียบร้อยแล้ว"]);
-    } catch (Exception $e) {
-        $db->rollBack();
-        http_response_code(500);
-        echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        try {
+            $db->beginTransaction();
+            // 1. บันทึกข้อมูลลง daily_logs และ log_items (โค้ดส่วนเดิมของคุณ)
+            $stmt = $db->prepare("INSERT INTO daily_logs (user_id, log_date) VALUES (:uid, :date) ON DUPLICATE KEY UPDATE log_id=LAST_INSERT_ID(log_id)");
+            $stmt->execute([':uid' => $user_id, ':date' => $log_date]);
+            $log_id = $db->lastInsertId();
+
+            $total_added_sodium = 0;
+            foreach ($selected_foods as $food) {
+                $stmt = $db->prepare("INSERT INTO log_items (log_id, food_id, quantity, meal_type) VALUES (:lid, :fid, 1, :mtype)");
+                $stmt->execute([':lid' => $log_id, ':fid' => $food['food_id'], ':mtype' => $meal_type]);
+                $total_added_sodium += $food['sodium_mg'];
+            }
+
+            // 2. ตรวจสอบจำนวนรายการอาหารทั้งหมดของ User เพื่อให้แต้ม
+            // เงื่อนไข: บันทึกครบทุกๆ 3 รายการ ได้ 1 แต้ม (ไม่จำกัดวัน)
+            $stmt = $db->prepare("SELECT COUNT(*) FROM log_items li JOIN daily_logs dl ON li.log_id = dl.log_id WHERE dl.user_id = :uid");
+            $stmt->execute([':uid' => $user_id]);
+            $total_items = $stmt->fetchColumn();
+
+            if ($total_items > 0 && $total_items % 3 === 0) {
+                $stmt = $db->prepare("UPDATE users SET total_points = total_points + 1 WHERE user_id = :uid");
+                $stmt->execute([':uid' => $user_id]);
+            }
+
+            $db->commit();
+            echo json_encode(["status" => "success", "message" => "บันทึกเรียบร้อย"]);
+        } catch (Exception $e) {
+            $db->rollBack();
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
+        exit;
     }
 }

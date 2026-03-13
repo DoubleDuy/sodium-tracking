@@ -89,8 +89,14 @@ const Auth = () => {
         });
 
         if (response.data.status === "success") {
+          const user = response.data.user;
           localStorage.setItem("user", JSON.stringify(response.data.user));
-          navigate("/splash");
+
+          if (user.pretest_done === 0) {
+            navigate("/pretest");
+          } else {
+            navigate("/splash");
+          }
         }
       } catch (error: any) {
         const message = error.response?.data?.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
@@ -156,7 +162,7 @@ const Auth = () => {
           setIsLogin(true); // เมื่อสมัครเสร็จ ให้สลับไปหน้า Login
           toast({
             title: "สมัครสมาชิกสำเร็จ!",
-            description: "กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ",
+            description: "กรุณาเข้าสู่ระบบ",
           });
         }
       } catch (error: any) {

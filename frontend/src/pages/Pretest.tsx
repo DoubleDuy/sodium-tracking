@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/axios";
 
 interface Question {
   id: number;
@@ -105,6 +107,7 @@ const choiceLabels = ["A", "B", "C", "D"];
 
 const Pretest = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
     Array(questions.length).fill(null)
@@ -135,19 +138,47 @@ const Pretest = () => {
     }
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    const score = answers.reduce<number>(
-      (acc, ans, i) => acc + (ans === questions[i].correctIndex ? 1 : 0),
-      0
-    );
-    // Save pretest completion & score
-    localStorage.setItem("pretest_done", "true");
-    localStorage.setItem("pretest_score", String(score));
+  const handleSubmit = async () => {
+    try {
+      const res = await api.post("/index.php?page=food-log&action=submit_test", {
+        test_type: "pre",
+        score: score
+      });
+      
+      // ✅ 3. จัดการกรณี Success และ Error ตามสถานะที่ PHP ส่งมา
+      if (res.data.status === "success") {
+        toast({
+          title: "บันทึกสำเร็จ",
+          description: res.data.message, // "ได้รับ 1 แต้มเรียบร้อยแล้ว"
+        });
+
+        // อัปเดตสถานะใน localStorage เพื่อให้ระบบรู้ว่าทำเสร็จแล้ว
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        user.pretest_done = 1;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        setSubmitted(true);
+      } else {
+        // กรณี Error ที่ส่งมาจาก PHP (เช่น วันไม่ตรง หรือเคยทำไปแล้ว)
+        toast({
+          variant: "destructive",
+          title: "ไม่สามารถบันทึกได้",
+          description: res.data.message, // จะแสดง "ไม่อยู่ในช่วงเวลาที่กำหนด" หรือ "คุณเคยรับแต้มส่วนนี้ไปแล้ว"
+        });
+      }
+    } catch (err: any) {
+      // กรณี Error จากระบบ (เช่น ลืม Login หรือ Server ล่ม)
+      const errMsg = err.response?.data?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
+      toast({
+        variant: "destructive",
+        title: "เกิดข้อผิดพลาด",
+        description: errMsg,
+      });
+    }
   };
 
   const handleFinish = () => {
-    navigate("/dashboard");
+    navigate("/splash");
   };
 
   const score = answers.reduce<number>(

@@ -36,7 +36,7 @@ useEffect(() => {
     } catch (error) {
       // ถ้า Session หมดอายุหรือผิดพลาด ให้กลับไปเริ่มใหม่ที่หน้า Login
       localStorage.removeItem("user");
-      navigate("/login");
+      navigate("/");
     }
   };
 

@@ -17,6 +17,23 @@
 
     switch ($page) {
 
+        case 'profile':
+        require_once './config/config.php';
+        $db = new Connect();
+        $user_id = $_SESSION['user_id'] ?? null;
+        
+        if (!$user_id) {
+            echo json_encode(["status" => "error", "message" => "Unauthorized"]);
+            exit;
+        }
+
+        $stmt = $db->prepare("SELECT total_points, pretest_done, posttest_done FROM users WHERE user_id = :uid");
+        $stmt->execute([':uid' => $user_id]);
+        $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        echo json_encode(["status" => "success", "data" => $user_data]);
+        exit;
+        
         // authentication
         case 'register':
             require_once 'auth/register.php';
